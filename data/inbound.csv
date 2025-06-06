@@ -1,0 +1,188 @@
+"geoUnit","country","continent","year","value"
+"ALB","Albania","Europe",2022,1872
+"ALB","Albania","Europe",2023,2012
+"AND","Andorra","Europe",2022,246
+"AND","Andorra","Europe",2023,304
+"ARE","United Arab Emirates","Asia",2022,225845
+"ARE","United Arab Emirates","Asia",2023,237034
+"ARG","Argentina","Americas",2022,137116
+"ARM","Armenia","Asia",2022,6735
+"ARM","Armenia","Asia",2023,6680
+"AUS","Australia","Oceania",2022,382007
+"AUS","Australia","Oceania",2023,467074
+"AUT","Austria","Europe",2022,85196.5546875
+"AUT","Austria","Europe",2023,87009.5625
+"AZE","Azerbaijan","Asia",2022,6377
+"AZE","Azerbaijan","Asia",2023,7052
+"BDI","Burundi","Africa",2023,6035
+"BEL","Belgium","Europe",2022,55747
+"BEN","Benin","Africa",2022,3972
+"BFA","Burkina Faso","Africa",2022,3594
+"BFA","Burkina Faso","Africa",2023,4091
+"BGD","Bangladesh","Asia",2022,2281
+"BGR","Bulgaria","Europe",2022,19162
+"BGR","Bulgaria","Europe",2023,19250
+"BHR","Bahrain","Asia",2022,5720
+"BHR","Bahrain","Asia",2023,5475
+"BIH","Bosnia & Herzegovina","Europe",2022,5691
+"BIH","Bosnia & Herzegovina","Europe",2023,6081
+"BLR","Belarus","Europe",2022,25672
+"BLR","Belarus","Europe",2023,21917
+"BLZ","Belize","Americas",2022,188
+"BLZ","Belize","Americas",2023,36
+"BMU","Bermuda","Americas",2023,43
+"BRA","Brazil","Americas",2022,24009
+"BRA","Brazil","Americas",2023,25186
+"BRN","Brunei","Asia",2023,577
+"BWA","Botswana","Africa",2022,1290
+"BWA","Botswana","Africa",2023,2172
+"CAN","Canada","Americas",2022,336837
+"CHE","Switzerland","Europe",2022,64847
+"CHE","Switzerland","Europe",2023,66189
+"CHL","Chile","Americas",2022,17721
+"CHL","Chile","Americas",2023,19891
+"CHN","China","Asia",2022,210903
+"CHN","China","Asia",2023,200892
+"CIV","Côte d’Ivoire","Africa",2022,4144
+"CIV","Côte d’Ivoire","Africa",2023,4298
+"CMR","Cameroon","Africa",2022,8499
+"CMR","Cameroon","Africa",2023,7392
+"COL","Colombia","Americas",2022,5448
+"CUB","Cuba","Americas",2023,6513
+"CYP","Cyprus","Asia",2022,10731
+"CZE","Czechia","Europe",2022,53369
+"DEU","Germany","Europe",2022,403473
+"DEU","Germany","Europe",2023,423197
+"DNK","Denmark","Europe",2022,31375
+"DNK","Denmark","Europe",2023,29674
+"DOM","Dominican Republic","Americas",2022,54701
+"DZA","Algeria","Africa",2022,7724
+"DZA","Algeria","Africa",2023,3618
+"ECU","Ecuador","Americas",2022,6735
+"EGY","Egypt","Africa",2022,69828
+"EGY","Egypt","Africa",2023,86848
+"EGY","Egypt","Africa",2024,51649
+"ESP","Spain","Europe",2022,91692
+"ESP","Spain","Europe",2023,102162
+"EST","Estonia","Europe",2022,5062
+"EST","Estonia","Europe",2023,4869
+"FIN","Finland","Europe",2022,26774
+"FIN","Finland","Europe",2023,30346
+"FRA","France","Europe",2022,263458.625
+"GBR","United Kingdom","Europe",2022,674931
+"GEO","Georgia","Asia",2022,17527
+"GEO","Georgia","Asia",2023,25105
+"GHA","Ghana","Africa",2022,5416
+"GHA","Ghana","Africa",2023,4765
+"GIN","Guinea","Africa",2022,1181
+"GIN","Guinea","Africa",2023,1327
+"GRC","Greece","Europe",2022,26785
+"GTM","Guatemala","Americas",2023,2192
+"HKG","Hong Kong SAR China","Asia",2022,53948
+"HKG","Hong Kong SAR China","Asia",2023,63688
+"HRV","Croatia","Europe",2022,5735
+"HUN","Hungary","Europe",2022,40290
+"HUN","Hungary","Europe",2023,41730
+"IND","India","Asia",2022,46659
+"IND","India","Asia",2023,45700
+"IRL","Ireland","Europe",2022,27159
+"ISL","Iceland","Europe",2022,2102
+"ISR","Israel","Asia",2022,13181
+"ITA","Italy","Europe",2022,89946
+"ITA","Italy","Europe",2023,106450
+"JOR","Jordan","Asia",2022,39225
+"JOR","Jordan","Asia",2023,38875
+"JPN","Japan","Asia",2022,199298
+"KGZ","Kyrgyzstan","Asia",2022,80701
+"KGZ","Kyrgyzstan","Asia",2023,72853
+"KGZ","Kyrgyzstan","Asia",2024,55827
+"KOR","South Korea","Asia",2022,123280
+"LBN","Lebanon","Asia",2022,40246
+"LBN","Lebanon","Asia",2023,34178
+"LCA","St. Lucia","Americas",2022,82
+"LCA","St. Lucia","Americas",2023,383
+"LKA","Sri Lanka","Asia",2022,1623
+"LKA","Sri Lanka","Asia",2023,1773
+"LTU","Lithuania","Europe",2022,9129
+"LUX","Luxembourg","Europe",2022,3905.5
+"LVA","Latvia","Europe",2022,9810
+"LVA","Latvia","Europe",2023,10080
+"MAC","Macao SAR China","Asia",2022,28263
+"MAC","Macao SAR China","Asia",2023,34160
+"MAR","Morocco","Africa",2022,23584
+"MAR","Morocco","Africa",2023,25252
+"MCO","Monaco","Europe",2022,910
+"MCO","Monaco","Europe",2023,990
+"MCO","Monaco","Europe",2024,1131
+"MDA","Moldova","Europe",2022,5716
+"MDA","Moldova","Europe",2023,5536
+"MDG","Madagascar","Africa",2022,986
+"MDG","Madagascar","Africa",2023,651
+"MHL","Marshall Islands","Oceania",2022,48
+"MKD","North Macedonia","Europe",2022,4707
+"MLT","Malta","Europe",2022,4531.10009765625
+"MLT","Malta","Europe",2023,6242.2001953125
+"MNG","Mongolia","Asia",2022,1547
+"MNG","Mongolia","Asia",2023,3593
+"MNG","Mongolia","Asia",2024,3671
+"MUS","Mauritius","Africa",2022,3020
+"MUS","Mauritius","Africa",2024,2944
+"MYS","Malaysia","Asia",2022,100437
+"MYS","Malaysia","Asia",2023,109036
+"NAM","Namibia","Africa",2022,2132
+"NIC","Nicaragua","Americas",2023,3263
+"NOR","Norway","Europe",2022,13279
+"NOR","Norway","Europe",2023,14141
+"NZL","New Zealand","Oceania",2022,25389.5078125
+"NZL","New Zealand","Oceania",2023,36407.01953125
+"OMN","Oman","Asia",2023,3149
+"PAN","Panama","Americas",2022,6103
+"POL","Poland","Europe",2022,91751
+"POL","Poland","Europe",2023,89677
+"PRT","Portugal","Europe",2022,49916
+"QAT","Qatar","Asia",2022,17017
+"QAT","Qatar","Asia",2023,18762
+"ROU","Romania","Europe",2022,34772
+"ROU","Romania","Europe",2023,36216
+"RUS","Russia","Europe",2022,340326
+"RUS","Russia","Europe",2023,336453
+"RWA","Rwanda","Africa",2022,4347
+"RWA","Rwanda","Africa",2023,7944
+"SAU","Saudi Arabia","Asia",2022,64874
+"SEN","Senegal","Africa",2022,16216
+"SEN","Senegal","Africa",2023,25658
+"SGP","Singapore","Asia",2022,66308
+"SLV","El Salvador","Americas",2022,839
+"SLV","El Salvador","Americas",2023,938
+"SMR","San Marino","Europe",2022,824
+"SMR","San Marino","Europe",2023,923
+"SRB","Serbia","Europe",2022,11247
+"SRB","Serbia","Europe",2023,11419
+"SVK","Slovakia","Europe",2022,16696
+"SVK","Slovakia","Europe",2023,21262
+"SVN","Slovenia","Europe",2022,7729
+"SVN","Slovenia","Europe",2023,8499
+"SWE","Sweden","Europe",2022,33910.2265625
+"SWE","Sweden","Europe",2023,34661.390625
+"TCA","Turks & Caicos Islands","Americas",2022,183
+"THA","Thailand","Asia",2022,27113
+"THA","Thailand","Asia",2023,29928
+"THA","Thailand","Asia",2024,40886
+"TKM","Turkmenistan","Asia",2022,69
+"TKM","Turkmenistan","Asia",2023,53
+"TTO","Trinidad & Tobago","Americas",2022,1255
+"TTO","Trinidad & Tobago","Americas",2023,1177
+"TUN","Tunisia","Africa",2022,8642
+"TUN","Tunisia","Africa",2023,9496
+"TUR","Turkey","Asia",2022,244027
+"TZA","Tanzania","Africa",2022,1205
+"TZA","Tanzania","Africa",2024,1058
+"UKR","Ukraine","Europe",2023,50865
+"URY","Uruguay","Americas",2022,4428
+"USA","United States","Americas",2023,956923.125
+"UZB","Uzbekistan","Asia",2022,5503
+"UZB","Uzbekistan","Asia",2023,4935
+"VNM","Vietnam","Asia",2022,7760
+"WSM","Samoa","Oceania",2022,162
+"WSM","Samoa","Oceania",2023,134
+"ZAF","South Africa","Africa",2022,30631

@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DVP Dashboard</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .dashboard {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      height: 80vh;
+      background-color: #f5f5f5;
+    }
+
+    .chart-left {
+      flex: 6.5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .controls {
+      margin: 10px;
+    }
+
+    .bubbleChartContainer {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;  
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #bubbleChart {
+      flex: 7.5;
+      width: 100%;
+      height: 100%;
+      display: block;
+      position: relative;
+    }
+
+    #yControl {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      writing-mode: vertical-rl;
+      text-align: center;
+    }
+
+    #xControl {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      text-align: center;
+    }
+
+    #yearSliderWrapper {
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .chart-right {
+      flex: 3.5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .barline-tooltip {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      pointer-events: none;
+      visibility: hidden;
+      z-index: 1000;
+    }
+
+
+    svg {
+      width: 90%;
+      height: 90%;
+    }
+
+
+    .description {
+      height: 40vh;
+      padding: 20px;
+      background-color: #ffffff;
+      border-top: 1px solid #ccc;
+      overflow-y: auto;
+    }
+
+    .dropdown-container {
+      position: relative;
+      width: 250px;
+      margin: 10px 0;
+    }
+
+    #searchDropdownInput {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    .dropdown-list {
+      position: absolute;
+      width: 100%;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-top: none;
+      background-color: white;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: none;
+      z-index: 999;
+    }
+
+    .dropdown-list li {
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .dropdown-list li:hover {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dashboard -->
+  <div class="dashboard">
+    <div class="chart-left">
+      <!-- bubble chart with interactable elements -->
+      <div id="bubbleChartWrapper" style="position: relative; width: 80%; height: 80%; top:auto ">
+        <svg id="bubbleChart"></svg>
+
+        <!-- drop-down menu for x axis -->
+        <div id="xControl">
+          <label>
+            <select id="xSelect">
+              <optgroup label="Student Indicators">
+                <option value="net_flow">student net flow</option>
+                <option value="inflow">student inflow</option>
+              </optgroup>
+              <optgroup label="QS Indicators">
+                <option value="rank_display">Rank Display</option>
+                <option value="ar_score">Academic Reputation</option>
+                <option value="er_score">Employer Reputation</option>
+                <option value="fsr_score">Faculty Student Ratio</option>
+                <option value="cpf_score">Citations per Faculty</option>
+                <option value="ifr_score">International Faculty Ratio</option>
+                <option value="isr_score">International Student Ratio</option>
+                <option value="irn_score">International Research Network</option>
+                <option value="ger_score">Employment Outcomes</option>
+                <option value="Overall_Score">Overall Score</option>
+              </optgroup>
+              <optgroup label="WEO Indicators">
+                <option value="BCA">BCA</option>
+                <option value="BCA_NGDPD">BCA_NGDPD</option>
+                <option value="GGR">GGR</option>
+                <option value="GGR_NGDP">GGR_NGDP</option>
+                <option value="GGSB">GGSB</option>
+                <option value="GGSB_NPGDP">GGSB_NPGDP</option>
+                <option value="GGX">GGX</option>
+                <option value="GGXCNL">GGXCNL</option>
+                <option value="GGXCNL_NGDP">GGXCNL_NGDP</option>
+                <option value="GGXONLB">GGXONLB</option>
+                <option value="GGXONLB_NGDP">GGXONLB_NGDP</option>
+                <option value="GGXWDG">GGXWDG</option>
+                <option value="GGXWDG_NGDP">GGXWDG_NGDP</option>
+                <option value="GGXWDN">GGXWDN</option>
+                <option value="GGXWDN_NGDP">GGXWDN_NGDP</option>
+                <option value="GGX_NGDP">GGX_NGDP</option>
+                <option value="LE">LE</option>
+                <option value="LP">LP</option>
+                <option value="LUR">LUR</option>
+                <option value="NGAP_NPGDP">NGAP_NPGDP</option>
+                <option value="NGDP">NGDP</option>
+                <option value="NGDPD">NGDPD</option>
+                <option value="NGDPDPC">NGDPDPC</option>
+                <option value="NGDPPC">NGDPPC</option>
+                <option value="NGDPRPC">NGDPRPC</option>
+                <option value="NGDPRPPPPC">NGDPRPPPPC</option>
+                <option value="NGDP_D">NGDP_D</option>
+                <option value="NGDP_FY">NGDP_FY</option>
+                <option value="NGDP_R">NGDP_R</option>
+                <option value="NGDP_RPCH">NGDP_RPCH</option>
+                <option value="NGSD_NGDP">NGSD_NGDP</option>
+                <option value="NID_NGDP">NID_NGDP</option>
+                <option value="PCPI">PCPI</option>
+                <option value="PCPIE">PCPIE</option>
+                <option value="PCPIEPCH">PCPIEPCH</option>
+                <option value="PCPIPCH">PCPIPCH</option>
+                <option value="PPPEX">PPPEX</option>
+                <option value="PPPGDP">PPPGDP</option>
+                <option value="PPPPC">PPPPC</option>
+                <option value="PPPSH">PPPSH</option>
+                <option value="TMG_RPCH">TMG_RPCH</option>
+                <option value="TM_RPCH">TM_RPCH</option>
+                <option value="TXG_RPCH">TXG_RPCH</option>
+                <option value="TX_RPCH">TX_RPCH</option>
+              </optgroup>
+            </select>
+          </label>
+        </div>
+
+        <!-- drop-down menu for y axis -->
+        <div id="yControl">
+          <label>
+            <select id="ySelect">
+              <optgroup label="Student Indicators">
+                <option value="net_flow">student net flow</option>
+                <option value="inflow">student inflow</option>
+              </optgroup>
+              <optgroup label="QS Indicators">
+                <option value="rank_display">Rank Display</option>
+                <option value="ar_score">Academic Reputation</option>
+                <option value="er_score">Employer Reputation</option>
+                <option value="fsr_score">Faculty Student Ratio</option>
+                <option value="cpf_score">Citations per Faculty</option>
+                <option value="ifr_score">International Faculty Ratio</option>
+                <option value="isr_score">International Student Ratio</option>
+                <option value="irn_score">International Research Network</option>
+                <option value="ger_score">Employment Outcomes</option>
+                <option value="Overall_Score">Overall Score</option>
+              </optgroup>
+              <optgroup label="WEO Indicators">
+                <option value="BCA">BCA</option>
+                <option value="BCA_NGDPD">BCA_NGDPD</option>
+                <option value="GGR">GGR</option>
+                <option value="GGR_NGDP">GGR_NGDP</option>
+                <option value="GGSB">GGSB</option>
+                <option value="GGSB_NPGDP">GGSB_NPGDP</option>
+                <option value="GGX">GGX</option>
+                <option value="GGXCNL">GGXCNL</option>
+                <option value="GGXCNL_NGDP">GGXCNL_NGDP</option>
+                <option value="GGXONLB">GGXONLB</option>
+                <option value="GGXONLB_NGDP">GGXONLB_NGDP</option>
+                <option value="GGXWDG">GGXWDG</option>
+                <option value="GGXWDG_NGDP">GGXWDG_NGDP</option>
+                <option value="GGXWDN">GGXWDN</option>
+                <option value="GGXWDN_NGDP">GGXWDN_NGDP</option>
+                <option value="GGX_NGDP">GGX_NGDP</option>
+                <option value="LE">LE</option>
+                <option value="LP">LP</option>
+                <option value="LUR">LUR</option>
+                <option value="NGAP_NPGDP">NGAP_NPGDP</option>
+                <option value="NGDP">NGDP</option>
+                <option value="NGDPD">NGDPD</option>
+                <option value="NGDPDPC">NGDPDPC</option>
+                <option value="NGDPPC">NGDPPC</option>
+                <option value="NGDPRPC">NGDPRPC</option>
+                <option value="NGDPRPPPPC">NGDPRPPPPC</option>
+                <option value="NGDP_D">NGDP_D</option>
+                <option value="NGDP_FY">NGDP_FY</option>
+                <option value="NGDP_R">NGDP_R</option>
+                <option value="NGDP_RPCH">NGDP_RPCH</option>
+                <option value="NGSD_NGDP">NGSD_NGDP</option>
+                <option value="NID_NGDP">NID_NGDP</option>
+                <option value="PCPI">PCPI</option>
+                <option value="PCPIE">PCPIE</option>
+                <option value="PCPIEPCH">PCPIEPCH</option>
+                <option value="PCPIPCH">PCPIPCH</option>
+                <option value="PPPEX">PPPEX</option>
+                <option value="PPPGDP">PPPGDP</option>
+                <option value="PPPPC">PPPPC</option>
+                <option value="PPPSH">PPPSH</option>
+                <option value="TMG_RPCH">TMG_RPCH</option>
+                <option value="TM_RPCH">TM_RPCH</option>
+                <option value="TXG_RPCH">TXG_RPCH</option>
+                <option value="TX_RPCH">TX_RPCH</option>
+              </optgroup>
+            </select>
+          </label>
+        </div>
+
+      </div>
+
+      <!-- slider -->
+      <div id="yearSliderWrapper">
+        <label for="yearSlider">year: 
+          <span id="yearLabel">2022</span>
+        </label>
+        <br />
+        <input type="range" id="yearSlider" min="2022" max="2024" step="1" value="2022" style="width: 200px" />
+      </div>
+
+      <label>
+        <input type="checkbox" id="toggleLabels" checked>
+        display country names
+      </label>
+
+      <label for="sizeSelect">QS indicators</label>
+      <select id="sizeSelect">
+        <option value="disabled"> --Disable Size-- </option>
+        <optgroup label="Student Indicators">
+          <option value="net_flow">student net flow</option>
+          <option value="inflow">student inflow</option>
+        </optgroup>
+        <optgroup label="QS Indicators">
+          <option value="rank_display">Rank Display</option>
+          <option value="ar_score">Academic Reputation</option>
+          <option value="er_score">Employer Reputation</option>
+          <option value="fsr_score">Faculty Student Ratio</option>
+          <option value="cpf_score">Citations per Faculty</option>
+          <option value="ifr_score">International Faculty Ratio</option>
+          <option value="isr_score">International Student Ratio</option>
+          <option value="irn_score">International Research Network</option>
+          <option value="ger_score">Employment Outcomes</option>
+          <option value="Overall_Score">Overall Score</option>
+        </optgroup>
+        <optgroup label="WEO Indicators">
+          <option value="BCA">BCA</option>
+          <option value="BCA_NGDPD">BCA_NGDPD</option>
+          <option value="GGR">GGR</option>
+          <option value="GGR_NGDP">GGR_NGDP</option>
+          <option value="GGSB">GGSB</option>
+          <option value="GGSB_NPGDP">GGSB_NPGDP</option>
+          <option value="GGX">GGX</option>
+          <option value="GGXCNL">GGXCNL</option>
+          <option value="GGXCNL_NGDP">GGXCNL_NGDP</option>
+          <option value="GGXONLB">GGXONLB</option>
+          <option value="GGXONLB_NGDP">GGXONLB_NGDP</option>
+          <option value="GGXWDG">GGXWDG</option>
+          <option value="GGXWDG_NGDP">GGXWDG_NGDP</option>
+          <option value="GGXWDN">GGXWDN</option>
+          <option value="GGXWDN_NGDP">GGXWDN_NGDP</option>
+          <option value="GGX_NGDP">GGX_NGDP</option>
+          <option value="LE">LE</option>
+          <option value="LP">LP</option>
+          <option value="LUR">LUR</option>
+          <option value="NGAP_NPGDP">NGAP_NPGDP</option>
+          <option value="NGDP">NGDP</option>
+          <option value="NGDPD">NGDPD</option>
+          <option value="NGDPDPC">NGDPDPC</option>
+          <option value="NGDPPC">NGDPPC</option>
+          <option value="NGDPRPC">NGDPRPC</option>
+          <option value="NGDPRPPPPC">NGDPRPPPPC</option>
+          <option value="NGDP_D">NGDP_D</option>
+          <option value="NGDP_FY">NGDP_FY</option>
+          <option value="NGDP_R">NGDP_R</option>
+          <option value="NGDP_RPCH">NGDP_RPCH</option>
+          <option value="NGSD_NGDP">NGSD_NGDP</option>
+          <option value="NID_NGDP">NID_NGDP</option>
+          <option value="PCPI">PCPI</option>
+          <option value="PCPIE">PCPIE</option>
+          <option value="PCPIEPCH">PCPIEPCH</option>
+          <option value="PCPIPCH">PCPIPCH</option>
+          <option value="PPPEX">PPPEX</option>
+          <option value="PPPGDP">PPPGDP</option>
+          <option value="PPPPC">PPPPC</option>
+          <option value="PPPSH">PPPSH</option>
+          <option value="TMG_RPCH">TMG_RPCH</option>
+          <option value="TM_RPCH">TM_RPCH</option>
+          <option value="TXG_RPCH">TXG_RPCH</option>
+          <option value="TX_RPCH">TX_RPCH</option>
+        </optgroup>
+      </select>
+
+      <label for="aggregateSelect">Aggregation method</label>
+      <select id="aggregateSelect">
+        <option value="mean">Mean</option>
+        <option value="median">Median</option>
+        <option value="max">Max</option>
+        <option value="min">Min</option>
+      </select>
+
+    </div>
+
+    <div class="chart-right">
+      <svg id="barLineChart"></svg>
+
+      <div class="dropdown-container">
+        <span>Search For Country</span>
+        <input type="text" id="searchDropdownInput" placeholder="Search country..." />
+        <ul id="dropdownList" class="dropdown-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- description -->
+  <div class="description">
+    <h2>視覺化說明</h2>
+    <p>
+      這個圖表顯示了某些資料的互動式視覺化。你可以在這裡補充解釋、描述資料來源、或提供操作說明等資訊。
+    </p>
+  </div>
+
+  <script>
+    let inFlowData = [];
+    let netFlowData = [];
+    let WEOData = [];
+    let QSData = [];
+    let countryList = [];
+    let activeContinents = new Set(["Asia", "Europe", "Africa", "Oceania", "Americas"]);
+    let selectedCountryCode = 'AUS';
+
+    Promise.all([
+      d3.csv("data/inbound.csv", d => ({ ISO: d.geoUnit, Country: d.country, continent: d.continent, year: +d.year, inflow: +d.value })),
+      d3.csv("data/net_flow.csv", d => ({ ISO: d.geoUnit, Country: d.country, continent: d.continent, year: +d.year, net_flow: +d.value })),
+      d3.csv("data/WEO_cleaned.csv", d => {
+        const obj = { ISO: d.ISO, Country: d.Country, continent: d.continent };
+        Object.keys(d).forEach(key => {
+          if (key !== "ISO" && key !== "Country" && key !== "continent") {
+            obj[key] = +d[key];
+          }
+        });
+        return obj;
+      }),
+      d3.csv("data/QS_cleaned.csv", d => {
+        const obj = {institution: d.institution, ISO: d.location_code, Country: d.location, continent: d.continent}
+        Object.keys(d).forEach(key => {
+          if (key !== "institution" && key !== "location_code" && key !== "location" && key !== "continent") {
+            obj[key] = +d[key];
+          }
+        })
+        return obj;
+      })
+    ]).then(([inFlow, netFlow, weo, qs]) => {
+      inFlowData = inFlow;
+      netFlowData = netFlow;
+      WEOData = weo;
+      QSData = qs;
+
+      countryList = Array.from(
+        new Map(WEOData.map(d => [d.ISO, d.Country])).entries()
+      ).map(([ISO, Country]) => ({ ISO, Country })).sort((a, b) => a.Country.localeCompare(b.Country));
+
+      // console.log(countryList);
+
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+
+    const bubbleSvg = d3.select("#bubbleChart");
+
+    const tooltip = d3.select("body")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("position", "absolute")
+      .style("visibility", "hidden")
+      .style("background", "rgba(0,0,0,0.7)")
+      .style("color", "#fff")
+      .style("padding", "5px 10px")
+      .style("border-radius", "5px")
+      .style("font-size", "12px");
+
+    const margin = { top: 20, right: 20, bottom: 40, left: 40 },
+      width = 700,
+      height = 460,
+      innerWidth = width - margin.left - margin.right,
+      innerHeight = height - margin.top - margin.bottom;
+
+    const chartGroup = bubbleSvg
+      .attr("width", width)
+      .attr("height", height)
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const continentColorMap = {
+      "Asia": "#1f77b4",
+      "Europe": "#ff7f0e",
+      "Africa": "#2ca02c",
+      "Oceania": "#d62728",
+      "Americas": "#9467bd"
+    };
+
+    let rScale = d3.scaleLinear()
+          .range([6, 40]);
+
+    function aggregate(values, method) {
+      values = values.filter(v => !isNaN(v)); // 過濾 NaN
+      if (values.length === 0) return 0;
+      switch (method) {
+        case "mean":
+          return d3.mean(values);
+        case "median":
+          return d3.median(values);
+        case "max":
+          return d3.max(values);
+        case "min":
+          return d3.min(values);
+        default:
+          return 0;
+      }
+    }
+
+
+    function updateBubbleChart() {
+      xVar = d3.select("#xSelect").property("value");
+      xGroup = d3.select("#xSelect").node().selectedOptions[0].parentNode.label;
+      yVar = d3.select("#ySelect").property("value");
+      yGroup = d3.select("#ySelect").node().selectedOptions[0].parentNode.label;
+      year = +d3.select("#yearSlider").property("value");
+      sizeVar = d3.select("#sizeSelect").property("value");
+      sizeGroup = d3.select("#sizeSelect").node().selectedOptions[0].parentNode.label;
+      aggregateMethod = d3.select("#aggregateSelect").property("value");
+
+      function getData(value, group, year) {
+        let data;
+        if (value == 'disabled') return null;
+
+        if (value === 'net_flow') {
+          data = netFlowData;
+        } else if (value === 'inflow') {
+          data = inFlowData;
+        } else if (group === 'QS Indicators') {
+          data = QSData;
+        } else {
+          data = WEOData;
+        }
+        data = data.filter(d => d.year === year);
+
+        if (group === 'QS Indicators'){
+          const qsList = []
+          const groupedByCountry = d3.group(data, d => d.ISO);
+          groupedByCountry.forEach((entries, countryCode) => {
+            const continent = entries[0]?.continent || "Unknown";
+            let values = entries.map(e => {
+              return +e[value];
+            });
+            qsList.push({ISO: countryCode, year: year, [value]:aggregate(values, aggregateMethod), continent: continent})
+          });
+          data = qsList;
+        }
+        return data;
+      }
+
+      let xSelectData = getData(xVar, xGroup, year);
+      let ySelectData = getData(yVar, yGroup, year);
+      let sizeSelectData = getData(sizeVar, sizeGroup, year);
+      
+      let rScale;
+
+      if (sizeVar !== "disabled") {
+        const validRValues = sizeSelectData
+          .filter(d => !isNaN(d[sizeVar]))
+          .map(d => +d[sizeVar]);
+
+        if (validRValues.length > 0) {
+          const rExtent = d3.extent(validRValues); // [min, max]
+
+          rScale = d3.scaleLinear()
+            .domain(rExtent)
+            .range([6, 40]);
+        }
+      }
+
+      const mergedData = ySelectData.map(d => {
+        const match = xSelectData.find(w => w.ISO === d.ISO);
+        // console.log(match.inflow);
+        // console.log(match)
+        if (!match) return null;
+        const sizeEntry = sizeSelectData ? sizeSelectData.find(w => w.ISO === d.ISO) : null;
+        const sizeValue = sizeEntry ? sizeEntry[sizeVar] : null;
+        let r = 6;
+        if (sizeVar !== "disabled" && sizeValue !== undefined && rScale) {
+          r = rScale(sizeValue);
+        }
+        const item = {
+          ISO: d.ISO,
+          x: match[xVar],
+          y: d[yVar],
+          r,
+          sizeValue,
+          country: d.Country,
+          continent: d.continent
+        };
+        return item;
+      }).filter(d => d && !isNaN(d.x) && !isNaN(d.y));
+
+      drawBubbleChart(mergedData, xVar, yVar, sizeVar);
+    }
+
+    // 畫氣泡圖
+    function drawBubbleChart(data, xLabel, yLabel, sizeLabel) {
+      const labelVisibility = d3.select("#toggleLabels").property("checked");
+
+      const sizeLegendLabel = {
+        "net_flow": "Intenational Student net Flow",
+        "inflow": "Intenational Student Inflow",
+        "rank_display": "Rank Display",
+        "ar_score": "Academic Reputation",
+        "er_score": "Employer Reputation",
+        "fsr_score": "Faculty Student Ratio",
+        "cpf_score": "Citations per Faculty",
+        "ifr_score": "International Faculty Ratio",
+        "isr_score": "International Student Ratio",
+        "irn_score": "International Research Network",
+        "ger_score": "Employment Outcomes",
+        "Overall_Score": "QS Overall Score"
+      };
+
+      const xExtent = d3.extent(data, d => d.x);
+      const yExtent = d3.extent(data, d => d.y);
+
+      // Add padding (e.g., 10% of the range)
+      const xPadding = (xExtent[1] - xExtent[0]) * 0.2;
+      const yPadding = (yExtent[1] - yExtent[0]) * 0.2;
+
+      const xScale = d3.scaleLinear()
+        .domain([xExtent[0] - xPadding, xExtent[1] + xPadding])
+        .range([0, innerWidth]);
+
+      const yScale = d3.scaleLinear()
+        .domain([yExtent[0] - yPadding, yExtent[1] + yPadding])
+        .range([innerHeight, 0]);
+
+      chartGroup.selectAll("*").remove();
+
+      // Axis
+      chartGroup.append("g")
+        .attr("transform", `translate(0,${innerHeight})`)
+        .call(d3.axisBottom(xScale)
+          .ticks(6) 
+          .tickFormat(d3.format(".2s"))
+        );
+
+      chartGroup.append("g")
+        .call(d3.axisLeft(yScale)
+          .ticks(6)
+          .tickFormat(d3.format(".2s"))
+        );
+
+      // Circles
+      chartGroup.selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("cx", d => xScale(d.x))
+        .attr("cy", d => yScale(d.y))
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+        .attr("display", d => activeContinents.has(d.continent) ? "" : "none")
+        .attr("r", d => d.r)
+        .attr("opacity", 0.7)
+        .attr("fill", d => continentColorMap[d.continent])
+        .on("mouseover", function (event, d) {
+          const xLabelText = d3.select("#xSelect").property("value");
+          const yLabelText = d3.select("#ySelect").property("value");
+          const year = +d3.select("#yearSlider").property("value");
+          const sizeLabelText = d3.select("#sizeSelect").property("value");
+
+          if (sizeLabelText !== "disabled"){
+            tooltip.style("visibility", "visible")
+              .html(`
+                <strong>${d.country} - ${year}</strong><br/>
+                ${xLabelText}: ${d.x}<br/>
+                ${yLabelText}: ${d.y}<br/>
+                ${sizeLabelText}: ${Math.round(d.sizeValue * 100) / 100}
+              `)
+            .style("left", ( d3.pointer(event, document.getElementById("content"))[0] + 10) + "px")
+            .style("top", ( d3.pointer(event, document.getElementById("content"))[1]) + "px");
+          }
+          else{
+            tooltip.style("visibility", "visible")
+              .html(`
+                <strong>${d.country} - ${year}</strong><br/>
+                ${xLabelText}: ${d.x}<br/>
+                ${yLabelText}: ${d.y}
+              `)
+            .style("left", ( d3.pointer(event, document.getElementById("content"))[0] + 10) + "px")
+            .style("top", ( d3.pointer(event, document.getElementById("content"))[1]) + "px");
+          }
+
+
+          d3.select(this)
+            .attr("stroke", "red")
+            .attr("stroke-width", 2);
+        })
+        .on("mousemove", function (event) {
+          tooltip.style("top", (event.pageY + 10) + "px")
+            .style("left", (event.pageX + 10) + "px");
+        })
+        .on("mouseout", function () {
+          tooltip.style("visibility", "hidden");
+          d3.select(this).attr("stroke", "black").attr("stroke-width", 1);
+        }).on("click", function(event, d) {
+          updateBarLineChart(d.ISO);
+          selectedCountryCode = d.ISO;
+        });
+
+      const labels = chartGroup.selectAll(".country-label")
+        .data(data)
+        .enter()
+        .append("text")
+        .attr("class", "country-label")
+        .attr("x", d => xScale(d.x))
+        .attr("y", d => yScale(d.y))
+        .attr("dy", 2)
+        .attr("text-anchor", "middle")
+        .style("font-size", "10px")
+        .style("pointer-events", "none")
+        .style("fill", "#333")
+        .style("display", d => labelVisibility && activeContinents.has(d.continent) ? "block" : "none")
+        .text(d => d.country);
+
+      d3.select("#toggleLabels").on("change", () => {
+        const show = d3.select("#toggleLabels").property("checked");
+        d3.selectAll(".country-label")
+          .style("display", show ? "block" : "none");
+      });
+
+      const legend = chartGroup.append("g")
+        .attr("transform", `translate(${innerWidth + 10}, 0)`);
+
+      const continents = Object.keys(continentColorMap);
+
+      continents.forEach((continent, i) => {
+        const legendItem = legend.append("g")
+          .attr("class", "legend-item")
+          .attr("transform", `translate(0, ${i * 22})`)
+          .style("cursor", "pointer")
+          .on("click", function () {
+            if (activeContinents.has(continent)) {
+              activeContinents.delete(continent);
+            } else {
+              activeContinents.add(continent);
+            }
+            updateBubbleChart();
+          });
+
+        legendItem.append("circle")
+          .attr("cx", -20)
+          .attr("cy", 0)
+          .attr("r", 6)
+          .style("fill", activeContinents.has(continent) ? continentColorMap[continent] : "#ccc");
+
+        legendItem.append("text")
+          .attr("x", -8)
+          .attr("y", 4)
+          .text(continent)
+          .style("font-size", "12px")
+          .attr("alignment-baseline", "middle");
+      });
+
+      const textLabel = sizeVar in sizeLegendLabel ? sizeLegendLabel[sizeVar]: sizeVar;
+      legend.append("text")
+        .attr("x", -4*textLabel.length)
+        .attr("y", 150)
+        .text(textLabel)
+        .style("font-size", "12px")
+        .attr("alignment-baseline", "middle");
+
+
+      const legendSizeGroup = chartGroup.append("g")
+        .attr("class", "size-legend")
+        .attr("transform", `translate(${innerWidth}, ${innerHeight - 200})`);
+
+      
+      const rValues = d3.extent(data, d => d.sizeValue) // [min, max]
+      const minR = rValues[0];
+      const maxR = rValues[1];
+      const meanR = (minR + maxR) / 2;
+      const sizes = [40,23,6]
+      
+      const sizeData = [
+        { label: "Max", value: maxR },
+        { label: "Mean", value: meanR },
+        { label: "Min", value: minR }
+      ];
+
+      sizeData.forEach((d, i) => {
+        const yOffset = i * 17;
+
+        legendSizeGroup.append("circle")
+          .attr("cy", yOffset)
+          .attr("cx", 0)
+          .attr("r", sizes[i])
+          .attr("fill", "none")
+          .attr("stroke", "#333");
+
+        if(sizeVar !== "disabled"){
+          legendSizeGroup.append("text")
+          .attr("x", -5)
+          .attr("y", yOffset - sizes[i]/2)
+          .attr("alignment-baseline", "middle")
+          .style("font-size", "12px")
+          .text(Math.round(d.value));
+        }
+          
+      })
+            
+    }
+
+    d3.select("#xSelect").on("change", function() {
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+    d3.select("#ySelect").on("change", function() {
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+    d3.select("#yearSlider").on("input", function () {
+      d3.select("#yearLabel").text(this.value);
+      updateBubbleChart();
+    });
+    d3.select("#sizeSelect").on("change", function() {
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+    d3.select("#aggregateSelect").on("change", function() {
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+
+
+    // Bar
+    const barLineSvg = d3.select("#barLineChart");
+
+
+    function updateBarLineChart(countryCode) {
+      xVar = d3.select("#xSelect").property("value");
+      xGroup = d3.select("#xSelect").node().selectedOptions[0].parentNode.label;
+      yVar = d3.select("#ySelect").property("value");
+      yGroup = d3.select("#ySelect").node().selectedOptions[0].parentNode.label;
+      const aggregateMethod = d3.select("#aggregateSelect").property("value");
+
+      function getData(value, group, iso) {
+        let data;
+        if (value == 'disabled') return null;
+
+        if (value === 'net_flow') {
+          data = netFlowData;
+        } else if (value === 'inflow') {
+          data = inFlowData;
+        } else if (group === 'QS Indicators') {
+          data = QSData;
+        } else {
+          data = WEOData;
+        }
+        data = data.filter(d => d.ISO == iso)
+
+        if (group === 'QS Indicators'){
+          const qsList = []
+          const groupedByCountry = d3.group(data, d => d.ISO);
+          groupedByCountry.forEach((entries, countryCode) => {
+            const continent = entries[0]?.continent || "Unknown";
+            let values = entries.map(e => {
+              return +e[value];
+            });
+            qsList.push({ISO: countryCode, year: year, [value]:aggregate(values, aggregateMethod), continent: continent})
+          });
+          data = qsList;
+        }
+        return data;
+      }
+
+      const xSelectData = getData(xVar, xGroup, countryCode);
+      const ySelectData = getData(yVar, yGroup, countryCode);
+
+      // Combine by year
+      const combined = [2022, 2023, 2024].map(year => {
+        const yData = ySelectData.find(d => +d.year === year);
+        const xData = xSelectData.find(d => +d.year === year);
+        return {
+          year: year.toString(),
+          yValue: yData ? Math.round(yData[yVar] * 100) / 100 : null,
+          xValue: xData ? Math.round(xData[xVar] * 100) / 100 : null
+        };
+      });
+
+      const margin = { top: 40, right: 50, bottom: 40, left: 50 };
+      const width = 400;
+      const height = 300;
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+
+      barLineSvg.selectAll("*").remove();
+      const g = barLineSvg
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      const xScale = d3.scaleBand()
+        .domain(combined.map(d => d.year))
+        .range([0, innerWidth])
+        .padding(0.2);
+
+      const y1Max = d3.max(combined, d => d.yValue);
+      const y2Max = d3.max(combined, d => d.xValue);
+      const y1Min = d3.min(combined, d => d.yValue);
+      const y2Min = d3.min(combined, d => d.xValue);
+      const y1diff = y1Max - y1Min
+      const y2diff = y2Max - y2Min
+      const y1Scale = d3.scaleLinear().domain([y1Min - 0.1 * y1diff, y1Max + 0.1 * y1diff]).range([innerHeight, 0]);
+      const y2Scale = d3.scaleLinear().domain([y2Min - 0.1 * y2diff, y2Max + 0.1 * y2diff]).range([innerHeight, 0]);
+
+      const countryName = countryList.find(w => w.ISO === countryCode).Country;
+      const chartTitle = `${yVar.toUpperCase()} vs ${xVar.toUpperCase()} in ${countryName}`;
+
+      barLineSvg.append("text")
+        .attr("x", width / 2)
+        .attr("y", margin.top / 2)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "16px")
+        .attr("font-weight", "bold")
+        .text(chartTitle);
+
+      g.append("g")
+        .attr("transform", `translate(0, ${innerHeight})`)
+        .call(d3.axisBottom(xScale));
+
+      g.append("g")
+        .call(d3.axisLeft(y1Scale).ticks(6));
+        
+      g.append("g")
+        .attr("transform", `translate(${innerWidth}, 0)`)
+        .call(d3.axisRight(y2Scale).ticks(6));
+
+      g.selectAll(".bar")
+        .data(combined)
+        .enter()
+        .append("rect")
+        .attr("x", d => xScale(d.year) + xScale.bandwidth() / 4)
+        .attr("y", d => y1Scale(d.yValue))
+        .attr("width", xScale.bandwidth() / 2)
+        .attr("height", d => innerHeight - y1Scale(d.yValue))
+        .attr("fill", "#69b3a2")
+        .on("mouseover", function(event, d) {
+          tooltip
+            .style("visibility", "visible")
+            .html(`
+              <strong>Year:</strong> ${d.year}<br/>
+              ${yVar}: ${d.yValue != null ? d.yValue : "NO DATA"}<br/>
+              ${xVar}: ${d.xValue != null ? d.xValue : "NO DATA"}
+            `);
+          d3.select(this).attr("fill", "#2a5673");
+        })
+        .on("mousemove", function(event) {
+          tooltip
+            .style("top", (event.pageY + 10) + "px")
+            .style("left", (event.pageX + 10) + "px");
+        })
+        .on("mouseout", function() {
+          tooltip.style("visibility", "hidden");
+          d3.select(this).attr("fill", "#69b3a2");
+        });
+
+      const line = d3.line()
+        .x(d => xScale(d.year) + xScale.bandwidth() / 2)
+        .y(d => d.xValue != null ? y2Scale(d.xValue) : y2Scale(0));
+
+      g.append("path")
+        .datum(combined)
+        .attr("fill", "none")
+        .attr("stroke", "#ff6347")
+        .attr("stroke-width", 2)
+        .attr("d", line);
+
+      g.selectAll(".dot")
+        .data(combined)
+        .enter()
+        .append("circle")
+        .attr("cx", d => xScale(d.year) + xScale.bandwidth() / 2)
+        .attr("cy", d => d.xValue != null ? y2Scale(d.xValue) : y2Scale(0))
+        .attr("r", 4)
+        .attr("fill", "#ff6347")
+        .on("mouseover", function(event, d) {
+          tooltip
+            .style("visibility", "visible")
+            .html(`
+              <strong>Year:</strong> ${d.year}<br/>
+              ${yVar}: ${d.yValue != null ? d.yValue : "NO DATA"}<br/>
+              ${xVar}: ${d.xValue != null ? d.xValue : "NO DATA"}
+            `);
+          d3.select(this).attr("r", 6).attr("fill", "#d8721d");
+        })
+        .on("mousemove", function(event) {
+          tooltip
+            .style("top", (event.pageY + 10) + "px")
+            .style("left", (event.pageX + 10) + "px");
+        })
+        .on("mouseout", function() {
+          tooltip.style("visibility", "hidden");
+          d3.select(this).attr("r", 4).attr("fill", "#ff6347");
+        });
+    }
+
+    const input = document.getElementById("searchDropdownInput");
+    const dropdown = document.getElementById("dropdownList");
+
+    // Populate the list
+    function populateDropdown(filter = "") {
+      dropdown.innerHTML = "";
+      const filtered = countryList.filter(c => c.Country.toLowerCase().includes(filter.toLowerCase()));
+      // console.log(filtered);
+      filtered.forEach(country => {
+        const li = document.createElement("li");
+        li.textContent = country.Country;
+        li.addEventListener("click", () => {
+          input.value = country.Country;
+          dropdown.style.display = "none";
+          // Call update function if needed
+          selectedCountryCode = countryList.filter(c => c.Country == country.Country)[0].ISO;
+          updateBarLineChart(selectedCountryCode);
+        });
+        dropdown.appendChild(li);
+      });
+      dropdown.style.display = filtered.length ? "block" : "none";
+    }
+
+    // Search handler
+    input.addEventListener("input", () => {
+      populateDropdown(input.value);
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!document.querySelector(".dropdown-container").contains(e.target)) {
+        dropdown.style.display = "none";
+      }
+    });
+
+  </script>
+
+  <div id="tooltip" style="position: absolute; visibility: hidden; background: #eee; padding: 8px; border-radius: 4px; font-size: 12px; box-shadow: 0 0 5px rgba(0,0,0,0.2);"></div>
+
+</body>
+</html>

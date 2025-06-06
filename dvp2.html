@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DVP Dashboard</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    * {
+    box-sizing: border-box;
+    }
+
+    body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    }
+
+    .dashboard {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    min-height: 80vh;
+    background-color: #f5f5f5;
+    gap: 1rem;
+    padding: 1rem;
+    }
+
+    .chart-left, .chart-right {
+    flex: 1 1 100%;
+    }
+
+    @media (min-width: 768px) {
+    .chart-left {
+        flex: 6.5;
+    }
+
+    .chart-right {
+        flex: 3.5;
+    }
+    }
+
+    .chart-left, .chart-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+    }
+
+    #bubbleChartWrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 5 / 3;
+    height: auto; 
+    overflow: hidden; 
+    }
+
+    #bubbleChart {
+    width: 100%;
+    height: 100%;
+    }
+
+    #xControl, #yControl {
+    position: absolute;
+    z-index: 10;
+    }
+
+    #xControl {
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    }
+
+    #yControl {
+    top: 50%;
+    left: 0.5rem;
+    transform: translateY(-50%);
+    writing-mode: vertical-rl;
+    text-align: center;
+    }
+
+    .barline-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    pointer-events: none;
+    visibility: hidden;
+    z-index: 1000;
+    }
+
+    svg {
+    width: 100%;
+    height: auto;
+    max-height: 90%;
+    }
+
+    .description {
+    padding: 1rem 2rem;
+    background-color: #ffffff;
+    border-top: 1px solid #ccc;
+    overflow-y: auto;
+    }
+
+    .dropdown-container {
+    width: 100%;
+    max-width: 300px;
+    }
+
+    #searchDropdownInput {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    }
+
+    .dropdown-list {
+    position: absolute;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-top: none;
+    background-color: white;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: none;
+    z-index: 999;
+    }
+
+    .dropdown-list li {
+    padding: 0.5rem;
+    cursor: pointer;
+    }
+
+    .dropdown-list li:hover {
+    background-color: #f0f0f0;
+    }
+
+    #bubbleChartTitle {
+    display: block;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 0.1em;
+    margin-top: 0.1em;
+    }
+
+    #barLineChartContainer {
+    width: 100%;
+    max-width: 700px;
+    margin: auto;
+    aspect-ratio: 1 / 1;
+    padding: 1em;
+    }
+
+    svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    }
+
+    .dropdown-container {
+    position: relative;
+    max-width: 100%;
+    width: 300px;
+    }
+
+    #dropdownList {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    background-color: white;
+    z-index: 10;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+    }
+
+    #dropdownList li {
+    list-style: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; 
+    }
+
+
+
+  </style>
+</head>
+<body>
+  <!-- Dashboard  -->
+  <div class="dashboard">
+    <!-- left: Bubble Chart  -->
+    <div class="chart-left">
+      <span id="bubbleChartTitle">Title</span>
+      <div id="bubbleChartWrapper" class="bubbleChartContainer">
+        <svg id="bubbleChart"></svg>
+
+        <!-- X axis -->
+        <div id="xControl" class="axis-control">
+          <label>
+            <select id="xSelect">
+              <optgroup label="Student Indicators">
+                <option value="net_flow">student net flow</option>
+                <option value="inflow">student inflow</option>
+              </optgroup>
+              <optgroup label="QS Indicators">
+                <option value="rank_display">Rank Display</option>
+                <option value="qs_count">QS-Ranked Universities Count</option>
+                <option value="ar_score">Academic Reputation</option>
+                <option value="er_score">Employer Reputation</option>
+                <option value="fsr_score">Faculty Student Ratio</option>
+                <option value="cpf_score">Citations per Faculty</option>
+                <option value="ifr_score">International Faculty Ratio</option>
+                <option value="isr_score">International Student Ratio</option>
+                <option value="irn_score">International Research Network</option>
+                <option value="ger_score">Employment Outcomes</option>
+                <option value="Overall_Score">Overall Score</option>
+              </optgroup>
+              <optgroup label="WEO Indicators">
+                <option value="BCA">BCA</option>
+                <option value="BCA_NGDPD">BCA_NGDPD</option>
+                <option value="GGR">GGR</option>
+                <option value="GGR_NGDP">GGR_NGDP</option>
+                <option value="GGSB">GGSB</option>
+                <option value="GGSB_NPGDP">GGSB_NPGDP</option>
+                <option value="GGX">GGX</option>
+                <option value="GGXCNL">GGXCNL</option>
+                <option value="GGXCNL_NGDP">GGXCNL_NGDP</option>
+                <option value="GGXONLB">GGXONLB</option>
+                <option value="GGXONLB_NGDP">GGXONLB_NGDP</option>
+                <option value="GGXWDG">GGXWDG</option>
+                <option value="GGXWDG_NGDP">GGXWDG_NGDP</option>
+                <option value="GGXWDN">GGXWDN</option>
+                <option value="GGXWDN_NGDP">GGXWDN_NGDP</option>
+                <option value="GGX_NGDP">GGX_NGDP</option>
+                <option value="LE">LE</option>
+                <option value="LP">LP</option>
+                <option value="LUR">LUR</option>
+                <option value="NGAP_NPGDP">NGAP_NPGDP</option>
+                <option value="NGDP">NGDP</option>
+                <option value="NGDPD">NGDPD</option>
+                <option value="NGDPDPC">NGDPDPC</option>
+                <option value="NGDPPC">NGDPPC</option>
+                <option value="NGDPRPC">NGDPRPC</option>
+                <option value="NGDPRPPPPC">NGDPRPPPPC</option>
+                <option value="NGDP_D">NGDP_D</option>
+                <option value="NGDP_FY">NGDP_FY</option>
+                <option value="NGDP_R">NGDP_R</option>
+                <option value="NGDP_RPCH">NGDP_RPCH</option>
+                <option value="NGSD_NGDP">NGSD_NGDP</option>
+                <option value="NID_NGDP">NID_NGDP</option>
+                <option value="PCPI">PCPI</option>
+                <option value="PCPIE">PCPIE</option>
+                <option value="PCPIEPCH">PCPIEPCH</option>
+                <option value="PCPIPCH">PCPIPCH</option>
+                <option value="PPPEX">PPPEX</option>
+                <option value="PPPGDP">PPPGDP</option>
+                <option value="PPPPC">PPPPC</option>
+                <option value="PPPSH">PPPSH</option>
+                <option value="TMG_RPCH">TMG_RPCH</option>
+                <option value="TM_RPCH">TM_RPCH</option>
+                <option value="TXG_RPCH">TXG_RPCH</option>
+                <option value="TX_RPCH">TX_RPCH</option>
+              </optgroup>
+            </select>
+          </label>
+        </div>
+
+        <!-- Y axis -->
+        <div id="yControl" class="axis-control">
+          <label>
+            <select id="ySelect">
+              <optgroup label="Student Indicators">
+                <option value="net_flow">student net flow</option>
+                <option value="inflow">student inflow</option>
+              </optgroup>
+              <optgroup label="QS Indicators">
+                <option value="rank_display">Rank Display</option>
+                <option value="qs_count">QS-Ranked Universities Count</option>
+                <option value="ar_score">Academic Reputation</option>
+                <option value="er_score">Employer Reputation</option>
+                <option value="fsr_score">Faculty Student Ratio</option>
+                <option value="cpf_score">Citations per Faculty</option>
+                <option value="ifr_score">International Faculty Ratio</option>
+                <option value="isr_score">International Student Ratio</option>
+                <option value="irn_score">International Research Network</option>
+                <option value="ger_score">Employment Outcomes</option>
+                <option value="Overall_Score">Overall Score</option>
+              </optgroup>
+              <optgroup label="WEO Indicators">
+                <option value="BCA">BCA</option>
+                <option value="BCA_NGDPD">BCA_NGDPD</option>
+                <option value="GGR">GGR</option>
+                <option value="GGR_NGDP">GGR_NGDP</option>
+                <option value="GGSB">GGSB</option>
+                <option value="GGSB_NPGDP">GGSB_NPGDP</option>
+                <option value="GGX">GGX</option>
+                <option value="GGXCNL">GGXCNL</option>
+                <option value="GGXCNL_NGDP">GGXCNL_NGDP</option>
+                <option value="GGXONLB">GGXONLB</option>
+                <option value="GGXONLB_NGDP">GGXONLB_NGDP</option>
+                <option value="GGXWDG">GGXWDG</option>
+                <option value="GGXWDG_NGDP">GGXWDG_NGDP</option>
+                <option value="GGXWDN">GGXWDN</option>
+                <option value="GGXWDN_NGDP">GGXWDN_NGDP</option>
+                <option value="GGX_NGDP">GGX_NGDP</option>
+                <option value="LE">LE</option>
+                <option value="LP">LP</option>
+                <option value="LUR">LUR</option>
+                <option value="NGAP_NPGDP">NGAP_NPGDP</option>
+                <option value="NGDP">NGDP</option>
+                <option value="NGDPD">NGDPD</option>
+                <option value="NGDPDPC">NGDPDPC</option>
+                <option value="NGDPPC">NGDPPC</option>
+                <option value="NGDPRPC">NGDPRPC</option>
+                <option value="NGDPRPPPPC">NGDPRPPPPC</option>
+                <option value="NGDP_D">NGDP_D</option>
+                <option value="NGDP_FY">NGDP_FY</option>
+                <option value="NGDP_R">NGDP_R</option>
+                <option value="NGDP_RPCH">NGDP_RPCH</option>
+                <option value="NGSD_NGDP">NGSD_NGDP</option>
+                <option value="NID_NGDP">NID_NGDP</option>
+                <option value="PCPI">PCPI</option>
+                <option value="PCPIE">PCPIE</option>
+                <option value="PCPIEPCH">PCPIEPCH</option>
+                <option value="PCPIPCH">PCPIPCH</option>
+                <option value="PPPEX">PPPEX</option>
+                <option value="PPPGDP">PPPGDP</option>
+                <option value="PPPPC">PPPPC</option>
+                <option value="PPPSH">PPPSH</option>
+                <option value="TMG_RPCH">TMG_RPCH</option>
+                <option value="TM_RPCH">TM_RPCH</option>
+                <option value="TXG_RPCH">TXG_RPCH</option>
+                <option value="TX_RPCH">TX_RPCH</option>
+              </optgroup>
+            </select>
+          </label>
+        </div>
+      </div>
+
+
+      <!-- additional options -->
+      <div class="bubble-options">
+        <!-- display country tags -->
+        <label>
+          <input type="checkbox" id="toggleLabels" checked />
+          Display Country Tags
+        </label>
+
+        <!-- bubble size -->
+        <div class="dropdown-inline">
+          <label for="sizeSelect">Size Option: </label>
+          <select id="sizeSelect">
+            <option value="disabled"> --Disable Size-- </option>
+            <optgroup label="Student Indicators">
+                <option value="net_flow">student net flow</option>
+                <option value="inflow">student inflow</option>
+            </optgroup>
+            <optgroup label="QS Indicators">
+                <option value="rank_display">Rank Display</option>
+                <option value="qs_count">QS-Ranked Universities Count</option>
+                <option value="ar_score">Academic Reputation</option>
+                <option value="er_score">Employer Reputation</option>
+                <option value="fsr_score">Faculty Student Ratio</option>
+                <option value="cpf_score">Citations per Faculty</option>
+                <option value="ifr_score">International Faculty Ratio</option>
+                <option value="isr_score">International Student Ratio</option>
+                <option value="irn_score">International Research Network</option>
+                <option value="ger_score">Employment Outcomes</option>
+                <option value="Overall_Score">Overall Score</option>
+            </optgroup>
+            <optgroup label="WEO Indicators">
+                <option value="BCA">BCA</option>
+                <option value="BCA_NGDPD">BCA_NGDPD</option>
+                <option value="GGR">GGR</option>
+                <option value="GGR_NGDP">GGR_NGDP</option>
+                <option value="GGSB">GGSB</option>
+                <option value="GGSB_NPGDP">GGSB_NPGDP</option>
+                <option value="GGX">GGX</option>
+                <option value="GGXCNL">GGXCNL</option>
+                <option value="GGXCNL_NGDP">GGXCNL_NGDP</option>
+                <option value="GGXONLB">GGXONLB</option>
+                <option value="GGXONLB_NGDP">GGXONLB_NGDP</option>
+                <option value="GGXWDG">GGXWDG</option>
+                <option value="GGXWDG_NGDP">GGXWDG_NGDP</option>
+                <option value="GGXWDN">GGXWDN</option>
+                <option value="GGXWDN_NGDP">GGXWDN_NGDP</option>
+                <option value="GGX_NGDP">GGX_NGDP</option>
+                <option value="LE">LE</option>
+                <option value="LP">LP</option>
+                <option value="LUR">LUR</option>
+                <option value="NGAP_NPGDP">NGAP_NPGDP</option>
+                <option value="NGDP">NGDP</option>
+                <option value="NGDPD">NGDPD</option>
+                <option value="NGDPDPC">NGDPDPC</option>
+                <option value="NGDPPC">NGDPPC</option>
+                <option value="NGDPRPC">NGDPRPC</option>
+                <option value="NGDPRPPPPC">NGDPRPPPPC</option>
+                <option value="NGDP_D">NGDP_D</option>
+                <option value="NGDP_FY">NGDP_FY</option>
+                <option value="NGDP_R">NGDP_R</option>
+                <option value="NGDP_RPCH">NGDP_RPCH</option>
+                <option value="NGSD_NGDP">NGSD_NGDP</option>
+                <option value="NID_NGDP">NID_NGDP</option>
+                <option value="PCPI">PCPI</option>
+                <option value="PCPIE">PCPIE</option>
+                <option value="PCPIEPCH">PCPIEPCH</option>
+                <option value="PCPIPCH">PCPIPCH</option>
+                <option value="PPPEX">PPPEX</option>
+                <option value="PPPGDP">PPPGDP</option>
+                <option value="PPPPC">PPPPC</option>
+                <option value="PPPSH">PPPSH</option>
+                <option value="TMG_RPCH">TMG_RPCH</option>
+                <option value="TM_RPCH">TM_RPCH</option>
+                <option value="TXG_RPCH">TXG_RPCH</option>
+                <option value="TX_RPCH">TX_RPCH</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- aggregate option for QS indicators -->
+        <div class="dropdown-inline">
+          <label for="aggregateSelect">QS Aggregation Method: </label>
+          <select id="aggregateSelect">
+            <option value="mean">Mean</option>
+            <option value="median">Median</option>
+            <option value="max">Max</option>
+            <option value="min">Min</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- right: Bar + Line Chart & search country -->
+    <div class="chart-right">
+      <div class="barLineChartContainer" id="barLineChartContainer">
+        <svg id="barLineChart"></svg>
+      </div>
+
+      <!-- search country -->
+      <div class="dropdown-container">
+        <span>Search Country</span>
+        <input type="text" id="searchDropdownInput" placeholder="Enter Country Name..." />
+        <ul id="dropdownList" class="dropdown-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- description -->
+  <div class="description">
+    <h2>視覺化說明</h2>
+    <p>
+      此視覺化圖表展現了國際學生流動性等多維指標的關係，你可以透過下拉選單、滑桿、氣泡大小來互動探索資料。
+    </p>
+  </div>
+
+
+  <script>
+    let inFlowData = [];
+    let netFlowData = [];
+    let WEOData = [];
+    let QSData = [];
+    let countryList = [];
+    let activeContinents = new Set(["Asia", "Europe", "Africa", "Oceania", "Americas"]);
+    let selectedCountryCode = 'AUS';
+
+    // read all data
+    Promise.all([
+      d3.csv("./data/inbound.csv", d => ({ ISO: d.geoUnit, Country: d.country, continent: d.continent, year: +d.year, inflow: +d.value })),
+      d3.csv("./data/net_flow.csv", d => ({ ISO: d.geoUnit, Country: d.country, continent: d.continent, year: +d.year, net_flow: +d.value })),
+      d3.csv("./data/WEO_cleaned.csv", d => {
+        const obj = { ISO: d.ISO, Country: d.Country, continent: d.continent };
+        Object.keys(d).forEach(key => {
+          if (key !== "ISO" && key !== "Country" && key !== "continent") {
+            obj[key] = +d[key];
+          }
+        });
+        return obj;
+      }),
+      d3.csv("./data/QS_cleaned.csv", d => {
+        const obj = {institution: d.institution, ISO: d.location_code, Country: d.location, continent: d.continent}
+        Object.keys(d).forEach(key => {
+          if (key !== "institution" && key !== "location_code" && key !== "location" && key !== "continent") {
+            obj[key] = +d[key];
+          }
+        })
+        return obj;
+      })
+    ]).then(([inFlow, netFlow, weo, qs]) => {
+      inFlowData = inFlow;
+      netFlowData = netFlow;
+      WEOData = weo;
+      QSData = qs;
+
+      // console.log(QSData)
+
+      countryList = Array.from(
+        new Map(WEOData.map(d => [d.ISO, d.Country])).entries()
+      ).map(([ISO, Country]) => ({ ISO, Country })).sort((a, b) => a.Country.localeCompare(b.Country));
+
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+
+    // setup tooltip
+    const tooltip = d3.select("body")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("position", "absolute")
+      .style("visibility", "hidden")
+      .style("background", "rgba(0,0,0,0.7)")
+      .style("color", "#fff")
+      .style("padding", "5px 10px")
+      .style("border-radius", "5px")
+      .style("font-size", "12px");
+
+    // define the color for continents
+    const continentColorMap = {
+      "Asia": "#1f77b4",
+      "Europe": "#ff7f0e",
+      "Africa": "#2ca02c",
+      "Oceania": "#d62728",
+      "Americas": "#9467bd"
+    };
+
+
+    // Aggregate for QS data
+    function aggregate(values, method) {
+      values = values.filter(v => !isNaN(v)); 
+      if (values.length === 0) return 0;
+      switch (method) {
+        case "mean":
+          return d3.mean(values);
+        case "median":
+          return d3.median(values);
+        case "max":
+          return d3.max(values);
+        case "min":
+          return d3.min(values);
+        default:
+          return 0;
+      }
+    }
+
+    // display Indicator names
+    const sizeLegendLabel = {
+        "net_flow": "Intenational Student net Flow",
+        "inflow": "Intenational Student Inflow",
+        "rank_display": "Rank Display",
+        "ar_score": "Academic Reputation",
+        "er_score": "Employer Reputation",
+        "fsr_score": "Faculty Student Ratio",
+        "cpf_score": "Citations per Faculty",
+        "ifr_score": "International Faculty Ratio",
+        "isr_score": "International Student Ratio",
+        "irn_score": "International Research Network",
+        "ger_score": "Employment Outcomes",
+        "Overall_Score": "QS Overall Score"
+      };
+
+
+    // data preparation for drawing bubble chart
+    function updateBubbleChart() {
+      // get all properties
+      xVar = d3.select("#xSelect").property("value");
+      xGroup = d3.select("#xSelect").node().selectedOptions[0].parentNode.label;
+      yVar = d3.select("#ySelect").property("value");
+      yGroup = d3.select("#ySelect").node().selectedOptions[0].parentNode.label;
+      sizeVar = d3.select("#sizeSelect").property("value");
+      sizeGroup = d3.select("#sizeSelect").node().selectedOptions[0].parentNode.label;
+      aggregateMethod = d3.select("#aggregateSelect").property("value");
+      
+      // data processing
+      function getData(value, group) {
+        let data;
+        if (value == 'disabled') return null;
+
+        if (value === 'net_flow') {
+          data = netFlowData;
+        } else if (value === 'inflow') {
+          data = inFlowData;
+        } else if (group === 'QS Indicators') {
+          data = QSData;
+        } else {
+          data = WEOData;
+        }
+
+        if (group === 'QS Indicators'){
+          const qsList = []
+          const groupedByCountryYear = d3.group(data, d => d.ISO, d => d.year); 
+          groupedByCountryYear.forEach((yearData, countryCode) => {
+            yearData.forEach((entries, year) => {
+              const continent = entries[0]?.continent || "Unknown";
+              const country = entries[0]?.Country || "Unknown";
+              if (value !== 'qs_count'){
+                let values = entries.map(e => {
+                  return +e[value];
+                });
+                qsList.push({ISO: countryCode, year: year, [value]:aggregate(values, aggregateMethod), continent: continent, Country: country})
+              }
+              else{
+                qsList.push({ISO: countryCode, year: year, [value]:entries.length, continent: continent, Country: country})
+              }
+
+            });
+            });          
+          data = qsList;
+        }
+        return data;
+      }
+
+      let xSelectData = getData(xVar, xGroup);
+      let ySelectData = getData(yVar, yGroup);
+      let sizeSelectData = getData(sizeVar, sizeGroup);
+
+      // console.log("x", xSelectData);
+
+      let rScale;
+
+      // set up size scale
+      if (sizeVar !== "disabled") {
+        const validRValues = sizeSelectData
+          .filter(d => !isNaN(d[sizeVar]))
+          .map(d => +d[sizeVar]);
+
+        if (validRValues.length > 0) {
+          const rExtent = d3.extent(validRValues); // [min, max]
+
+          rScale = d3.scaleLinear()
+            .domain(rExtent)
+            .range([6, 40]);
+        }
+      }
+
+      // merge x-axis and y-axis data
+      const mergedData = ySelectData.map(d => {
+        const match = xSelectData.find(w => w.ISO === d.ISO && w.year === d.year);
+        if (!match) return null;
+        const sizeEntry = sizeSelectData ? sizeSelectData.find(w => w.ISO === d.ISO) : null;
+        const sizeValue = sizeEntry ? sizeEntry[sizeVar] : null;
+        let r = 6;
+        if (sizeVar !== "disabled" && sizeValue !== undefined && rScale) {
+          r = rScale(sizeValue);
+        }
+        const item = {
+          ISO: d.ISO,
+          year: d.year,
+          x: match[xVar],
+          y: d[yVar],
+          r,
+          sizeValue,
+          country: d.Country,
+          continent: d.continent
+        };
+        return item;
+      }).filter(d => d && !isNaN(d.x) && !isNaN(d.y));
+
+      drawBubbleChart(mergedData, xVar, yVar, sizeVar);
+    }
+
+    // drawing bubble chart
+    function drawBubbleChart(data, xLabel, yLabel, sizeLabel) {
+      // console.log(data);
+      const container = d3.select("#bubbleChartWrapper").node();
+      const { width, height } = container.getBoundingClientRect();
+
+      // set up margin
+      const margin = { top: 30, right: 150, bottom: 30 , left: 60 };
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+
+      d3.select("#bubbleChart").selectAll("*").remove();
+    
+      const labelVisibility = d3.select("#toggleLabels").property("checked");
+
+      // set up axis scale
+      const xExtent = d3.extent(data, d => d.x);
+      const yExtent = d3.extent(data, d => d.y);
+      const xPadding = (xExtent[1] - xExtent[0]) * 0.2;
+      const yPadding = (yExtent[1] - yExtent[0]) * 0.2;
+      const xScale = d3.scaleLinear()
+        .domain([xExtent[0] - xPadding, xExtent[1] + xPadding])
+        .range([0, innerWidth]);
+      const yScale = d3.scaleLinear()
+        .domain([yExtent[0] - yPadding, yExtent[1] + yPadding])
+        .range([innerHeight, 0]);
+
+      // start drawing
+      const svg = d3.select("#bubbleChart")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      // drawing bubbles
+      svg.selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("cx", d => xScale(d.x))
+        .attr("cy", d => yScale(d.y))
+        .attr("r", d => d.r)
+        .attr("fill", d => continentColorMap[d.continent])
+        .attr("display", d => activeContinents.has(d.continent) ? "" : "none")
+        .attr("opacity", 0.7)
+        .on("mouseover", function (event, d) {
+          const xLabelText = d3.select("#xSelect").property("value");
+          const yLabelText = d3.select("#ySelect").property("value");
+          const sizeLabelText = d3.select("#sizeSelect").property("value");
+
+          if (sizeLabelText !== "disabled"){
+            tooltip.style("visibility", "visible")
+              .html(`
+                <strong>${d.country} - ${d.year}</strong><br/>
+                ${xLabelText}: ${Math.round(d.x * 100) / 100}<br/>
+                ${yLabelText}: ${Math.round(d.y * 100) / 100}<br/>
+                ${sizeLabelText}: ${Math.round(d.sizeValue * 100) / 100}
+              `)
+            .style("left", ( d3.pointer(event, document.getElementById("content"))[0] + 10) + "px")
+            .style("top", ( d3.pointer(event, document.getElementById("content"))[1]) + "px");
+          }
+          else{
+            tooltip.style("visibility", "visible")
+              .html(`
+                <strong>${d.country} - ${d.year}</strong><br/>
+                ${xLabelText}: ${Math.round(d.x * 100) / 100}<br/>
+                ${yLabelText}: ${Math.round(d.y * 100) / 100}
+              `)
+            .style("left", ( d3.pointer(event, document.getElementById("content"))[0] + 10) + "px")
+            .style("top", ( d3.pointer(event, document.getElementById("content"))[1]) + "px");
+          }
+
+
+          d3.select(this)
+            .attr("stroke", "red")
+            .attr("stroke-width", 2);
+        })
+        .on("mousemove", function (event) {
+          tooltip.style("top", (event.pageY + 10) + "px")
+            .style("left", (event.pageX + 10) + "px");
+        })
+        .on("mouseout", function () {
+          tooltip.style("visibility", "hidden");
+          d3.select(this).attr("stroke-width", 0);
+        }).on("click", function(event, d) {
+          updateBarLineChart(d.ISO);
+          selectedCountryCode = d.ISO;
+        });
+
+      // drawing axis
+      svg.append("g")
+        .attr("transform", `translate(0, ${innerHeight})`)
+        .call(d3.axisBottom(xScale));
+      svg.append("g")
+        .call(d3.axisLeft(yScale));
+
+      // add country tags
+      if (document.getElementById("toggleLabels").checked) {
+        svg.selectAll(".label-text")
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("class", "label-text")
+            .attr("display", d => activeContinents.has(d.continent) ? "" : "none")
+            .attr("x", d => xScale(d.x))
+            .attr("y", d => yScale(d.y))
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .attr("font-size", "12px")
+            .attr("fill", "black")
+            .style("pointer-events", "none")
+            .text(d => `${d.country} ${d.year}`);
+        }
+
+      // add legend
+      const legendPadding = 10;
+      const legend = svg.append("g")
+        .attr("class", "legend")
+        .attr("transform", `translate(${innerWidth +30}, ${legendPadding})`);
+
+      const continents = Object.keys(continentColorMap);
+
+      continents.forEach((continent, i) => {
+        const legendItem = legend.append("g")
+            .attr("class", "legend-item")
+            .attr("transform", `translate(0, ${i * 22})`)
+            .style("cursor", "pointer")
+            .on("click", function () {
+            if (activeContinents.has(continent)) {
+                activeContinents.delete(continent);
+            } else {
+                activeContinents.add(continent);
+            }
+            updateBubbleChart(); 
+            });
+
+        legendItem.append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 6)
+            .style("fill", activeContinents.has(continent) ? continentColorMap[continent] : "#ccc");
+
+        legendItem.append("text")
+            .attr("x", 10)
+            .attr("y", 4)
+            .text(continent)
+            .style("font-size", "12px")
+            .attr("alignment-baseline", "middle");
+        });
+    
+  
+      // change bubble size (if applicable)
+      const rValues = d3.extent(data, d => d.sizeValue);
+      const [minR, maxR] = rValues;
+      const meanR = (minR + maxR) / 2;
+
+      const sizeData = [
+        { label: "Max", value: maxR },
+        { label: "Mean", value: meanR },
+        { label: "Min", value: minR }
+        ];
+      const sizes = [40,23,6]
+      
+      // add size legend
+      const legendSizeGroup = svg.append("g")
+        .attr("class", "size-legend")
+        .attr("transform", `translate(${innerWidth + 20}, ${legendPadding + 250})`);
+    
+      legendSizeGroup.append("text")
+        .text("Bubble Size")
+        .attr("x", 0)
+        .attr("y", -80)
+        .attr("alignment-baseline", "middle")
+        .style("font-size", "12px")
+        .style("font-weight", "bold");
+
+    
+      sizeData.forEach((d, i) => {
+        const yOffset = i * 17;
+
+        legendSizeGroup.append("circle")
+            .attr("cx", 35)
+            .attr("cy", yOffset)
+            .attr("r", sizes[i])
+            .attr("fill", "none")
+            .attr("stroke", "#333");
+
+        if (sizeLabel !== "disabled") {
+            legendSizeGroup.append("text")
+            .attr("x", 20)
+            .attr("y", yOffset - sizes[i]/2)
+            .attr("alignment-baseline", "middle")
+            .style("font-size", "12px")
+            .text(`${Math.round(d.value * 100) / 100}`);
+        }
+      });
+      
+      // caculate regression line
+      function computeRegression(data) {
+        const filtered = data.filter(d => activeContinents.has(d.continent));
+        const n = filtered.length;
+        if (n === 0) return null;
+
+        const sumX = d3.sum(filtered, d => d.x);
+        const sumY = d3.sum(filtered, d => d.y);
+        const meanX = sumX / n;
+        const meanY = sumY / n;
+
+        const covXY = d3.sum(filtered, d => (d.x - meanX) * (d.y - meanY));
+        const varX = d3.sum(filtered, d => (d.x - meanX) ** 2);
+        const varY = d3.sum(filtered, d => (d.y - meanY) ** 2);
+
+        const slope = covXY / varX;
+        const intercept = meanY - slope * meanX;
+
+        const r = covXY / Math.sqrt(varX * varY);
+
+        return {
+          slope,
+          intercept,
+          r
+        };
+      }
+
+      // drawing regression line
+      const regression = computeRegression(data);
+      if (regression) {
+        const { slope, intercept, r } = regression;
+
+        const xMin = d3.min(data, d => d.x);
+        const xMax = d3.max(data, d => d.x);
+
+        const yMin = Math.max(slope * xMin + intercept, d3.min(data, d => d.y));
+        const yMax = Math.min(slope * xMax + intercept, d3.max(data, d => d.y));
+
+        svg.selectAll(".regression-line").remove();
+
+        svg.append("line")
+          .attr("class", "regression-line")
+          .attr("x1", xScale(xMin))
+          .attr("y1", yScale(yMin))
+          .attr("x2", xScale(xMax))
+          .attr("y2", yScale(yMax))
+          .attr("stroke", "red")
+          .attr("stroke-width", 2.5)
+          .attr("stroke-dasharray", "5,5");
+
+        // console.log("Pearson r:", r.toFixed(3));
+        svg.selectAll(".correlation-label").remove();
+
+        svg.append("text")
+          .attr("class", "correlation-label")
+          .attr("x", xScale(xMax)+20)
+          .attr("y", yScale(yMax)-20)
+          .style("fill", "red")
+          .style("font-size", "14px")
+          .text(`r = ${regression.r.toFixed(3)}`);
+      }
+
+
+    }
+
+    
+    // set up charts updating events
+    d3.select("#xSelect").on("change", function() {
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+    d3.select("#ySelect").on("change", function() {
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+    d3.select("#sizeSelect").on("change", function() {
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+    d3.select("#aggregateSelect").on("change", function() {
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+    d3.select("#toggleLabels").on("change", function() {
+      updateBubbleChart();
+    });
+
+
+    // updating data and drawing bar line chart
+    function updateBarLineChart(countryCode) {
+      // get propertiies
+      xVar = d3.select("#xSelect").property("value");
+      xGroup = d3.select("#xSelect").node().selectedOptions[0].parentNode.label;
+      yVar = d3.select("#ySelect").property("value");
+      yGroup = d3.select("#ySelect").node().selectedOptions[0].parentNode.label;
+      const aggregateMethod = d3.select("#aggregateSelect").property("value");
+
+      // data processing
+      function getData(value, group, iso) {
+        let data;
+        if (value == 'disabled') return null;
+
+        if (value === 'net_flow') {
+          data = netFlowData;
+        } else if (value === 'inflow') {
+          data = inFlowData;
+        } else if (group === 'QS Indicators') {
+          data = QSData;
+        } else {
+          data = WEOData;
+        }
+        data = data.filter(d => d.ISO == iso)
+
+        if (group === 'QS Indicators'){
+          const qsList = []
+          const groupedByCountry = d3.group(data, d => d.year);
+          // console.log(groupedByCountry);
+          groupedByCountry.forEach((entries, year) => {
+            const continent = entries[0]?.continent || "Unknown";
+            if(value !== "qs_count"){
+              let values = entries.map(e => {
+                return +e[value];
+                });
+                qsList.push({ISO: iso, year: year, [value]:aggregate(values, aggregateMethod), continent: continent})
+              }
+            else{
+                qsList.push({ISO: iso, year: year, [value]:entries.length, continent: continent})
+            }
+            }
+            );
+          data = qsList;
+        }
+        return data;
+      }
+
+      const xSelectData = getData(xVar, xGroup, countryCode);
+      const ySelectData = getData(yVar, yGroup, countryCode);
+
+
+      // combining data
+      const combined = [2022, 2023, 2024].map(year => {
+        const yData = ySelectData.find(d => +d.year === year);
+        const xData = xSelectData.find(d => +d.year === year);
+        return {
+          year: year.toString(),
+          yValue: yData ? Math.round(yData[yVar] * 100) / 100 : null,
+          xValue: xData ? Math.round(xData[xVar] * 100) / 100 : null
+        };
+      });
+      
+
+      // starting drawing
+      const container = d3.select("#barLineChartContainer").node();
+      const { width, height } = container.getBoundingClientRect();
+
+      //set up margin
+      const margin = { top: 40, right: 50, bottom: 40, left: 50 };
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+
+      const barLineSvg = d3.select("#barLineChart")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("preserveAspectRatio", "xMidYMid meet");
+
+      barLineSvg.selectAll("*").remove();
+      const g = barLineSvg
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      const xScale = d3.scaleBand()
+        .domain(combined.map(d => d.year))
+        .range([0, innerWidth])
+        .padding(0.2);
+
+      const y1Max = d3.max(combined, d => d.yValue);
+      const y2Max = d3.max(combined, d => d.xValue);
+      const y1Min = d3.min(combined, d => d.yValue);
+      const y2Min = d3.min(combined, d => d.xValue);
+      const y1diff = y1Max - y1Min;
+      const y2diff = y2Max - y2Min;
+      const y1Scale = d3.scaleLinear().domain([y1Min - 0.1 * y1diff, y1Max + 0.1 * y1diff]).range([innerHeight, 0]);
+      const y2Scale = d3.scaleLinear().domain([y2Min - 0.1 * y2diff, y2Max + 0.1 * y2diff]).range([innerHeight, 0]);
+
+      // console.log(y1Max, y1Min);
+      // console.log(y2Max, y2Min);
+
+      const countryName = countryList.find(w => w.ISO === countryCode).Country;
+      const chartTitle = `${yVar.toUpperCase()} vs ${xVar.toUpperCase()} in ${countryName}`;
+
+      barLineSvg.append("text")
+        .attr("x", width / 2)
+        .attr("y", margin.top / 2)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "16px")
+        .attr("font-weight", "bold")
+        .text(chartTitle);
+
+      // draw axis
+      g.append("g")
+        .attr("transform", `translate(0, ${innerHeight})`)
+        .call(d3.axisBottom(xScale));
+      g.append("g")
+        .call(d3.axisLeft(y1Scale).ticks(6));
+      g.append("text")
+        .attr("class", "y1-axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -innerHeight / 2)
+        .attr("y", -60)
+        .attr("text-anchor", "middle")
+        .style("font-weight", "bold")
+        .text(xVar in sizeLegendLabel ? sizeLegendLabel[xVar] : xVar);
+      g.append("g")
+        .attr("transform", `translate(${innerWidth}, 0)`)
+        .call(d3.axisRight(y2Scale).ticks(6));
+      g.append("text")
+        .attr("class", "y2-axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -innerHeight / 2)
+        .attr("y", innerWidth + 60)
+        .attr("text-anchor", "middle")
+        .style("font-weight", "bold")
+        .text(yVar in sizeLegendLabel ? sizeLegendLabel[yVar] : yVar);
+
+      
+      // draw bars
+      g.selectAll(".bar")
+        .data(combined)
+        .enter()
+        .append("rect")
+        .attr("x", d => xScale(d.year) + xScale.bandwidth() / 4)
+        .attr("y", d => y1Scale(d.yValue))
+        .attr("width", xScale.bandwidth() / 2)
+        .attr("height", d => innerHeight - y1Scale(d.yValue))
+        .attr("fill", "#69b3a2")
+        .on("mouseover", function(event, d) {
+          tooltip
+            .style("visibility", "visible")
+            .html(`
+              <strong>Year:</strong> ${d.year}<br/>
+              ${yVar}: ${d.yValue != null ? d.yValue : "NO DATA"}<br/>
+              ${xVar}: ${d.xValue != null ? d.xValue : "NO DATA"}
+            `);
+          d3.select(this).attr("fill", "#2a5673");
+        })
+        .on("mousemove", function(event) {
+          tooltip
+            .style("top", (event.pageY + 10) + "px")
+            .style("left", (event.pageX + 10) + "px");
+        })
+        .on("mouseout", function() {
+          tooltip.style("visibility", "hidden");
+          d3.select(this).attr("fill", "#69b3a2");
+        });
+
+      const line = d3.line()
+        .x(d => xScale(d.year) + xScale.bandwidth() / 2)
+        .y(d => y2Scale(d.xValue));
+
+      // draw ling and dot
+      g.append("path")
+        .datum(combined)
+        .attr("fill", "none")
+        .attr("stroke", "#ff6347")
+        .attr("stroke-width", 2)
+        .attr("d", line);
+
+      g.selectAll(".dot")
+        .data(combined.filter(d => d.xValue != null))
+        .enter()
+        .append("circle")
+        .attr("cx", d => xScale(d.year) + xScale.bandwidth() / 2)
+        .attr("cy", d => d.xValue != null ? y2Scale(d.xValue) : y2Scale(0))
+        .attr("r", 4)
+        .attr("fill", "#ff6347")
+        .on("mouseover", function(event, d) {
+          tooltip
+            .style("visibility", "visible")
+            .html(`
+              <strong>Year:</strong> ${d.year}<br/>
+              ${yVar}: ${d.yValue != null ? d.yValue : "NO DATA"}<br/>
+              ${xVar}: ${d.xValue != null ? d.xValue : "NO DATA"}
+            `);
+          d3.select(this).attr("r", 6).attr("fill", "#d8721d");
+        })
+        .on("mousemove", function(event) {
+          tooltip
+            .style("top", (event.pageY + 10) + "px")
+            .style("left", (event.pageX + 10) + "px");
+        })
+        .on("mouseout", function() {
+          tooltip.style("visibility", "hidden");
+          d3.select(this).attr("r", 4).attr("fill", "#ff6347");
+        });
+    }
+
+    const input = document.getElementById("searchDropdownInput");
+    const dropdown = document.getElementById("dropdownList");
+
+    // Populate the list
+    function populateDropdown(filter = "") {
+      dropdown.innerHTML = "";
+      const filtered = countryList.filter(c => c.Country.toLowerCase().startsWith(filter.toLowerCase()));
+      filtered.forEach(country => {
+        const li = document.createElement("li");
+        li.textContent = country.Country;
+        li.textOVerflow = 'ellipsis';
+        li.addEventListener("click", () => {
+          input.value = country.Country;
+          dropdown.style.display = "none";
+          selectedCountryCode = countryList.filter(c => c.Country == country.Country)[0].ISO;
+          updateBarLineChart(selectedCountryCode);
+        });
+        dropdown.appendChild(li);
+      });
+      dropdown.style.display = filtered.length ? "block" : "none";
+    }
+
+    // Search handler
+    input.addEventListener("input", () => {
+      populateDropdown(input.value);
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!document.querySelector(".dropdown-container").contains(e.target)) {
+        dropdown.style.display = "none";
+      }
+    });
+
+  </script>
+
+  <div id="tooltip" style="position: absolute; visibility: hidden; background: #eee; padding: 8px; border-radius: 4px; font-size: 12px; box-shadow: 0 0 5px rgba(0,0,0,0.2);"></div>
+
+</body>
+</html>
