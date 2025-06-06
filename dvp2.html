@@ -197,6 +197,47 @@
     text-overflow: ellipsis; 
     }
 
+    .description-tabs {
+      margin-bottom: 10px;
+    }
+    .tab-button {
+      padding: 8px 16px;
+      margin-right: 4px;
+      border: 1px solid #aaa;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .tab-button.active {
+      background-color: #007acc;
+      color: white;
+      font-weight: bold;
+    }
+    .description-content h2 {
+      margin-top: 0;
+    }
+
+    .action-button-group {
+      margin-top: 1em;
+      display: flex;
+      gap: 1em; 
+      flex-wrap: wrap; 
+    }
+
+    .action-button {
+      padding: 8px 10px;
+      font-size: 14px;
+      background-color: #0c2b4d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .action-button:hover {
+      background-color: #0056b3;
+    }
 
 
   </style>
@@ -463,10 +504,16 @@
 
   <!-- description -->
   <div class="description">
-    <h2>視覺化說明</h2>
-    <p>
-      此視覺化圖表展現了國際學生流動性等多維指標的關係，你可以透過下拉選單、滑桿、氣泡大小來互動探索資料。
-    </p>
+    <div class="description-tabs">
+      <button class="tab-button active" data-tab="intro">Introduction</button>
+      <button class="tab-button" data-tab="qs">Student Mobility and QS Ranking</button>
+      <button class="tab-button" data-tab="econ">Student Mobility and Economy Indicators</button>
+      <button class="tab-button" data-tab="continent">Focus on Continents</button>
+      <button class="tab-button" data-tab="how">How to use it?</button>
+      <button class="tab-button" data-tab="info">Data Infomation</button>
+    </div>
+
+    <div class="description-content" id="descriptionContent"></div>
   </div>
 
 
@@ -481,9 +528,9 @@
 
     // read all data
     Promise.all([
-      d3.csv("./data/inbound.csv", d => ({ ISO: d.geoUnit, Country: d.country, continent: d.continent, year: +d.year, inflow: +d.value })),
-      d3.csv("./data/net_flow.csv", d => ({ ISO: d.geoUnit, Country: d.country, continent: d.continent, year: +d.year, net_flow: +d.value })),
-      d3.csv("./data/WEO_cleaned.csv", d => {
+      d3.csv("https://raw.githubusercontent.com/ASDF1234135/FIT5147-DVP/main/data/inbound.csv", d => ({ ISO: d.geoUnit, Country: d.country, continent: d.continent, year: +d.year, inflow: +d.value })),
+      d3.csv("https://raw.githubusercontent.com/ASDF1234135/FIT5147-DVP/main/data/net_flow.csv", d => ({ ISO: d.geoUnit, Country: d.country, continent: d.continent, year: +d.year, net_flow: +d.value })),
+      d3.csv("https://raw.githubusercontent.com/ASDF1234135/FIT5147-DVP/main/data/WEO_cleaned.csv", d => {
         const obj = { ISO: d.ISO, Country: d.Country, continent: d.continent };
         Object.keys(d).forEach(key => {
           if (key !== "ISO" && key !== "Country" && key !== "continent") {
@@ -492,7 +539,7 @@
         });
         return obj;
       }),
-      d3.csv("./data/QS_cleaned.csv", d => {
+      d3.csv("https://raw.githubusercontent.com/ASDF1234135/FIT5147-DVP/main/data/QS_cleaned.csv", d => {
         const obj = {institution: d.institution, ISO: d.location_code, Country: d.location, continent: d.continent}
         Object.keys(d).forEach(key => {
           if (key !== "institution" && key !== "location_code" && key !== "location" && key !== "continent") {
@@ -728,9 +775,9 @@
             tooltip.style("visibility", "visible")
               .html(`
                 <strong>${d.country} - ${d.year}</strong><br/>
-                ${xLabelText}: ${Math.round(d.x * 100) / 100}<br/>
-                ${yLabelText}: ${Math.round(d.y * 100) / 100}<br/>
-                ${sizeLabelText}: ${Math.round(d.sizeValue * 100) / 100}
+                ${xLabelText}: ${Math.round(d.x * 10000) / 10000}<br/>
+                ${yLabelText}: ${Math.round(d.y * 10000) / 10000}<br/>
+                ${sizeLabelText}: ${Math.round(d.sizeValue * 10000) / 10000}
               `)
             .style("left", ( d3.pointer(event, document.getElementById("content"))[0] + 10) + "px")
             .style("top", ( d3.pointer(event, document.getElementById("content"))[1]) + "px");
@@ -739,8 +786,8 @@
             tooltip.style("visibility", "visible")
               .html(`
                 <strong>${d.country} - ${d.year}</strong><br/>
-                ${xLabelText}: ${Math.round(d.x * 100) / 100}<br/>
-                ${yLabelText}: ${Math.round(d.y * 100) / 100}
+                ${xLabelText}: ${Math.round(d.x * 10000) / 10000}<br/>
+                ${yLabelText}: ${Math.round(d.y * 10000) / 10000}
               `)
             .style("left", ( d3.pointer(event, document.getElementById("content"))[0] + 10) + "px")
             .style("top", ( d3.pointer(event, document.getElementById("content"))[1]) + "px");
@@ -867,7 +914,7 @@
             .attr("y", yOffset - sizes[i]/2)
             .attr("alignment-baseline", "middle")
             .style("font-size", "12px")
-            .text(`${Math.round(d.value * 100) / 100}`);
+            .text(`${Math.round(d.value * 10000) / 10000}`);
         }
       });
       
@@ -1016,8 +1063,8 @@
         const xData = xSelectData.find(d => +d.year === year);
         return {
           year: year.toString(),
-          yValue: yData ? Math.round(yData[yVar] * 100) / 100 : null,
-          xValue: xData ? Math.round(xData[xVar] * 100) / 100 : null
+          yValue: yData ? Math.round(yData[yVar] * 10000) / 10000 : null,
+          xValue: xData ? Math.round(xData[xVar] * 10000) / 10000 : null
         };
       });
       
@@ -1083,7 +1130,7 @@
         .attr("y", -60)
         .attr("text-anchor", "middle")
         .style("font-weight", "bold")
-        .text(xVar in sizeLegendLabel ? sizeLegendLabel[xVar] : xVar);
+        .text(yVar in sizeLegendLabel ? sizeLegendLabel[yVar] : yVar);
       g.append("g")
         .attr("transform", `translate(${innerWidth}, 0)`)
         .call(d3.axisRight(y2Scale).ticks(6));
@@ -1094,7 +1141,7 @@
         .attr("y", innerWidth + 60)
         .attr("text-anchor", "middle")
         .style("font-weight", "bold")
-        .text(yVar in sizeLegendLabel ? sizeLegendLabel[yVar] : yVar);
+        .text(xVar in sizeLegendLabel ? sizeLegendLabel[xVar] : xVar);
 
       
       // draw bars
@@ -1202,6 +1249,155 @@
       }
     });
 
+    const tabContents = {
+      intro: {
+        title: "Introduction",
+        paragraphs: [
+          "This project explores the relationship between QS university rankings, " +
+          "international student mobility and national economic indicators.",
+
+          "By comparing countries that export and import international students, " +
+          "the study aims to uncover how educational quality and economic conditions " +
+          "influence global student movement patterns." +
+          "The findings could inform more effective international education policies.",
+
+          "The target audience of this project includes governments, educational institutions, and students around the world." +
+          "The main findings aim to provide inspiration and insights, while the highly interactive design allows audiences from different backgrounds to explore the content according to their interests, " +
+          "catering to the diverse needs of all user groups.",
+
+          "This project adopts a hybrid-driven approach. While the data story highlights the key findings, it also supports user-driven exploration. " +
+          "We hope that users can discover previously unnoticed correlations or patterns through the dashboard. For detailed usage instructions, please refer to the 'How to use?' page.",
+          
+          "The data story is mainly divided into three parts: Student Mobility and QS Ranking, Student Mobility and Economic Indicators, and Focus on Continents." + 
+          "Each section explores international student mobility from different perspectives, identifying the most impactful or relevant indicators, " +
+          "or highlighting regional differences in data distribution. You can access each section via the tabs above."
+        ],
+        button: null
+      },
+      qs: {
+        title: "Student Mobility and QS Ranking",
+        paragraphs: [
+          `In this section, we explore how student mobility correlates with key indicators from the QS World University Rankings across different countries. 
+          Through visual comparisons and data-driven insights, we highlight several notable patterns.`,
+
+          `<strong>QS-Ranked University Count</strong>`,
+          `This figure illustrates a clear trend: countries with a higher number of QS-ranked universities tend to attract more international students. 
+          This pattern holds consistently across all continents, indicating that the presence of prestigious institutions plays a significant role in a country's ability to draw students from abroad. 
+          In other words, the QS-Ranked University Count emerges as a critical factor when assessing a country's attractiveness in the global education landscape.`,
+
+          `<strong>International Student Ratio</strong>`,
+          `We examine the relationship between student net flow and the international student ratio. 
+          While this relationship is not as strong as the one observed in the previous analysis, a general upward trend can still be observed. 
+          Notably, this trend is more pronounced in regions outside of Asia, suggesting that a higher proportion of international students within universities may still contribute positively to a country's overall student mobility profile.`
+        ],
+        buttons: [
+          {
+            text: "View QS-Ranked University Count",
+            onClick: () => {
+              d3.select("#ySelect").property("value", "inflow").dispatch("change");
+              d3.select("#xSelect").property("value", "qs_count").dispatch("change");
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+              });
+            }
+          },
+          {
+            text: "View International Student Ratio",
+            onClick: () => {
+              activeContinents = new Set(["Europe", "Africa", "Oceania", "Americas"])
+              d3.select("#ySelect").property("value", "net_flow").dispatch("change");
+              d3.select("#xSelect").property("value", "isr_score").dispatch("change");
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+              });
+            }
+          }
+        ]
+      },
+      econ: {
+        title: "QS 世界大學排名",
+        paragraphs: [
+          "展示包含學術聲譽、就業力、國際化等多項 QS 指標。",
+          "可用來評估高等教育的質與量，對選校提供有力依據。"
+        ],
+        button: {
+          text: "分析排名指標",
+          onClick: () => alert("前往 QS 排名視圖")
+        }
+      },
+      continent: {
+        title: "國家經濟資料",
+        paragraphs: [
+          "顯示如 GDP、通膨率、失業率等經濟指標。",
+          "幫助你理解國家背景與教育發展的關聯。"
+        ],
+        button: {
+          text: "探索經濟趨勢",
+          onClick: () => alert("前往經濟資料視圖")
+        }
+      },
+      info: {
+        title: "國家經濟資料",
+        paragraphs: [
+          "顯示如 GDP、通膨率、失業率等經濟指標。",
+          "幫助你理解國家背景與教育發展的關聯。"
+        ],
+        button: {
+          text: "探索經濟趨勢",
+          onClick: () => alert("前往經濟資料視圖")
+        }
+      }
+    };
+
+    const buttons = document.querySelectorAll(".tab-button");
+    const descriptionContent = document.getElementById("descriptionContent");
+
+    function renderTab(tabKey) {
+      const content = tabContents[tabKey];
+      console.log(tabContents);
+      if (!content) return;
+
+      // 動態產生內容 HTML
+      let html = `<h2>${content.title}</h2>`;
+      content.paragraphs.forEach(p => {
+        html += `<p>${p}</p>`;
+      });
+
+      if (Array.isArray(content.buttons)) {
+        html += `<div class="action-button-group">`;
+        content.buttons.forEach(btn => {
+          html += `<button class="action-button">${btn.text}</button>`;
+        });
+        html += `</div>`;
+        descriptionContent.innerHTML = html;
+
+        const actionButtons = document.querySelectorAll(".action-button");
+        actionButtons.forEach((el, i) => {
+          el.onclick = content.buttons[i].onClick;
+        });
+      } else if (content.button) {
+        html += `<button class="action-button">${content.button.text}</button>`;
+        descriptionContent.innerHTML = html;
+        document.querySelector(".action-button").onclick = content.button.onClick;
+      } else {
+        descriptionContent.innerHTML = html;
+      }
+
+
+      
+    }
+
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        buttons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderTab(btn.dataset.tab);
+      });
+    });
+
+    renderTab("intro");
   </script>
 
   <div id="tooltip" style="position: absolute; visibility: hidden; background: #eee; padding: 8px; border-radius: 4px; font-size: 12px; box-shadow: 0 0 5px rgba(0,0,0,0.2);"></div>

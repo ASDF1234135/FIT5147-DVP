@@ -1,0 +1,13 @@
+In this section, we explore how student mobility correlates with key indicators from the QS World University Rankings across different countries. Through visual comparisons and data-driven insights, we highlight several notable patterns.
+
+<title 1>QS-Ranked University Count <button 1>
+This figure illustrates a clear trend: countries with a higher number of QS-ranked universities tend to attract more international students. This pattern holds consistently across all continents, indicating that the presence of prestigious institutions plays a significant role in a country's ability to draw students from abroad. In other words, the QS-Ranked University Count emerges as a critical factor when assessing a country's attractiveness in the global education landscape.
+
+<title 2> International Student Ratio <button 2> 
+We examine the relationship between student net flow and the international student ratio. While this relationship is not as strong as the one observed in the previous analysis, a general upward trend can still be observed. Notably, this trend is more pronounced in regions outside of Asia, suggesting that a higher proportion of international students within universities may still contribute positively to a country's overall student mobility profile.
+
+
+此section中我們則探索並整理了國際學生流動指標與該國家經濟指標的關聯性並提出主要發現。
+
+<title 1>LP - Population: Persons <button 1>
+令人驚訝的是，一國家的國際學生淨流量與輸入量都與Population數量有顯著的正相關。這也側面反映了當國家想要吸引國際學生時，
