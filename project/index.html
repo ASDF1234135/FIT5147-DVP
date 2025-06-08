@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DVP Dashboard</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Dashboard  -->
+  <h1 class="main-title">Relationship between QS Rankings, International Student Mobility, and National Economic indicators (2022-2024)</h1>
+  <div class="dashboard">
+    <!-- left: Bubble Chart  -->
+    <div class="chart-left">
+      <span class="chart-title">Interactive Bubble Chart</span>
+      <div id="bubbleChartWrapper" class="bubbleChartContainer">
+        <svg id="bubbleChart"></svg>
+
+        <!-- X axis -->
+        <div id="xControl" class="axis-control">
+          <label>
+            <select id="xSelect">
+              <optgroup label="Student Indicators">
+                <option value="net_flow">student net flow</option>
+                <option value="inflow">student inflow</option>
+              </optgroup>
+              <optgroup label="QS Indicators">
+                <option value="rank_display">University Rank</option>
+                <option value="qs_count">QS-Ranked Universities Count</option>
+                <option value="ar_score">Academic Reputation</option>
+                <option value="er_score">Employer Reputation</option>
+                <option value="fsr_score">Faculty Student Ratio</option>
+                <option value="cpf_score">Citations per Faculty</option>
+                <option value="ifr_score">International Faculty Ratio</option>
+                <option value="isr_score">International Student Ratio</option>
+                <option value="irn_score">International Research Network</option>
+                <option value="ger_score">Employment Outcomes</option>
+                <option value="Overall_Score">Overall Score</option>
+              </optgroup>
+              <optgroup label="WEO Indicators">
+                <option value="BCA">BCA</option>
+                <option value="BCA_NGDPD">BCA_NGDPD</option>
+                <option value="GGR">GGR</option>
+                <option value="GGR_NGDP">GGR_NGDP</option>
+                <option value="GGSB">GGSB</option>
+                <option value="GGSB_NPGDP">GGSB_NPGDP</option>
+                <option value="GGX">GGX</option>
+                <option value="GGXCNL">GGXCNL</option>
+                <option value="GGXCNL_NGDP">GGXCNL_NGDP</option>
+                <option value="GGXONLB">GGXONLB</option>
+                <option value="GGXONLB_NGDP">GGXONLB_NGDP</option>
+                <option value="GGXWDG">GGXWDG</option>
+                <option value="GGXWDG_NGDP">GGXWDG_NGDP</option>
+                <option value="GGXWDN">GGXWDN</option>
+                <option value="GGXWDN_NGDP">GGXWDN_NGDP</option>
+                <option value="GGX_NGDP">GGX_NGDP</option>
+                <option value="LE">LE</option>
+                <option value="LP">LP</option>
+                <option value="LUR">LUR</option>
+                <option value="NGAP_NPGDP">NGAP_NPGDP</option>
+                <option value="NGDP">NGDP</option>
+                <option value="NGDPD">NGDPD</option>
+                <option value="NGDPDPC">NGDPDPC</option>
+                <option value="NGDPPC">NGDPPC</option>
+                <option value="NGDPRPC">NGDPRPC</option>
+                <option value="NGDPRPPPPC">NGDPRPPPPC</option>
+                <option value="NGDP_D">NGDP_D</option>
+                <option value="NGDP_FY">NGDP_FY</option>
+                <option value="NGDP_R">NGDP_R</option>
+                <option value="NGDP_RPCH">NGDP_RPCH</option>
+                <option value="NGSD_NGDP">NGSD_NGDP</option>
+                <option value="NID_NGDP">NID_NGDP</option>
+                <option value="PCPI">PCPI</option>
+                <option value="PCPIE">PCPIE</option>
+                <option value="PCPIEPCH">PCPIEPCH</option>
+                <option value="PCPIPCH">PCPIPCH</option>
+                <option value="PPPEX">PPPEX</option>
+                <option value="PPPGDP">PPPGDP</option>
+                <option value="PPPPC">PPPPC</option>
+                <option value="PPPSH">PPPSH</option>
+                <option value="TMG_RPCH">TMG_RPCH</option>
+                <option value="TM_RPCH">TM_RPCH</option>
+                <option value="TXG_RPCH">TXG_RPCH</option>
+                <option value="TX_RPCH">TX_RPCH</option>
+              </optgroup>
+            </select>
+          </label>
+        </div>
+
+        <!-- Y axis -->
+        <div id="yControl" class="axis-control">
+          <label>
+            <select id="ySelect">
+              <optgroup label="Student Indicators">
+                <option value="net_flow">student net flow</option>
+                <option value="inflow">student inflow</option>
+              </optgroup>
+              <optgroup label="QS Indicators">
+                <option value="rank_display">University Rank</option>
+                <option value="qs_count">QS-Ranked Universities Count</option>
+                <option value="ar_score">Academic Reputation</option>
+                <option value="er_score">Employer Reputation</option>
+                <option value="fsr_score">Faculty Student Ratio</option>
+                <option value="cpf_score">Citations per Faculty</option>
+                <option value="ifr_score">International Faculty Ratio</option>
+                <option value="isr_score">International Student Ratio</option>
+                <option value="irn_score">International Research Network</option>
+                <option value="ger_score">Employment Outcomes</option>
+                <option value="Overall_Score">Overall Score</option>
+              </optgroup>
+              <optgroup label="WEO Indicators">
+                <option value="BCA">BCA</option>
+                <option value="BCA_NGDPD">BCA_NGDPD</option>
+                <option value="GGR">GGR</option>
+                <option value="GGR_NGDP">GGR_NGDP</option>
+                <option value="GGSB">GGSB</option>
+                <option value="GGSB_NPGDP">GGSB_NPGDP</option>
+                <option value="GGX">GGX</option>
+                <option value="GGXCNL">GGXCNL</option>
+                <option value="GGXCNL_NGDP">GGXCNL_NGDP</option>
+                <option value="GGXONLB">GGXONLB</option>
+                <option value="GGXONLB_NGDP">GGXONLB_NGDP</option>
+                <option value="GGXWDG">GGXWDG</option>
+                <option value="GGXWDG_NGDP">GGXWDG_NGDP</option>
+                <option value="GGXWDN">GGXWDN</option>
+                <option value="GGXWDN_NGDP">GGXWDN_NGDP</option>
+                <option value="GGX_NGDP">GGX_NGDP</option>
+                <option value="LE">LE</option>
+                <option value="LP">LP</option>
+                <option value="LUR">LUR</option>
+                <option value="NGAP_NPGDP">NGAP_NPGDP</option>
+                <option value="NGDP">NGDP</option>
+                <option value="NGDPD">NGDPD</option>
+                <option value="NGDPDPC">NGDPDPC</option>
+                <option value="NGDPPC">NGDPPC</option>
+                <option value="NGDPRPC">NGDPRPC</option>
+                <option value="NGDPRPPPPC">NGDPRPPPPC</option>
+                <option value="NGDP_D">NGDP_D</option>
+                <option value="NGDP_FY">NGDP_FY</option>
+                <option value="NGDP_R">NGDP_R</option>
+                <option value="NGDP_RPCH">NGDP_RPCH</option>
+                <option value="NGSD_NGDP">NGSD_NGDP</option>
+                <option value="NID_NGDP">NID_NGDP</option>
+                <option value="PCPI">PCPI</option>
+                <option value="PCPIE">PCPIE</option>
+                <option value="PCPIEPCH">PCPIEPCH</option>
+                <option value="PCPIPCH">PCPIPCH</option>
+                <option value="PPPEX">PPPEX</option>
+                <option value="PPPGDP">PPPGDP</option>
+                <option value="PPPPC">PPPPC</option>
+                <option value="PPPSH">PPPSH</option>
+                <option value="TMG_RPCH">TMG_RPCH</option>
+                <option value="TM_RPCH">TM_RPCH</option>
+                <option value="TXG_RPCH">TXG_RPCH</option>
+                <option value="TX_RPCH">TX_RPCH</option>
+              </optgroup>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <!-- additional options -->
+      <div class="bubble-options">
+        <!-- display country tags -->
+        <label id="toggleLabelsElement">
+          <input type="checkbox" id="toggleLabels" checked />
+          Display Country Tags
+        </label>
+
+        <!-- bubble size -->
+        <div class="dropdown-inline">
+          <label for="sizeSelect">Size Option: </label>
+          <select id="sizeSelect">
+            <option value="disabled"> --Disable Size-- </option>
+            <optgroup label="Student Indicators">
+                <option value="net_flow">student net flow</option>
+                <option value="inflow">student inflow</option>
+            </optgroup>
+            <optgroup label="QS Indicators">
+                <option value="rank_display">University Rank</option>
+                <option value="qs_count">QS-Ranked Universities Count</option>
+                <option value="ar_score">Academic Reputation</option>
+                <option value="er_score">Employer Reputation</option>
+                <option value="fsr_score">Faculty Student Ratio</option>
+                <option value="cpf_score">Citations per Faculty</option>
+                <option value="ifr_score">International Faculty Ratio</option>
+                <option value="isr_score">International Student Ratio</option>
+                <option value="irn_score">International Research Network</option>
+                <option value="ger_score">Employment Outcomes</option>
+                <option value="Overall_Score">Overall Score</option>
+            </optgroup>
+            <optgroup label="WEO Indicators">
+                <option value="BCA">BCA</option>
+                <option value="BCA_NGDPD">BCA_NGDPD</option>
+                <option value="GGR">GGR</option>
+                <option value="GGR_NGDP">GGR_NGDP</option>
+                <option value="GGSB">GGSB</option>
+                <option value="GGSB_NPGDP">GGSB_NPGDP</option>
+                <option value="GGX">GGX</option>
+                <option value="GGXCNL">GGXCNL</option>
+                <option value="GGXCNL_NGDP">GGXCNL_NGDP</option>
+                <option value="GGXONLB">GGXONLB</option>
+                <option value="GGXONLB_NGDP">GGXONLB_NGDP</option>
+                <option value="GGXWDG">GGXWDG</option>
+                <option value="GGXWDG_NGDP">GGXWDG_NGDP</option>
+                <option value="GGXWDN">GGXWDN</option>
+                <option value="GGXWDN_NGDP">GGXWDN_NGDP</option>
+                <option value="GGX_NGDP">GGX_NGDP</option>
+                <option value="LE">LE</option>
+                <option value="LP">LP</option>
+                <option value="LUR">LUR</option>
+                <option value="NGAP_NPGDP">NGAP_NPGDP</option>
+                <option value="NGDP">NGDP</option>
+                <option value="NGDPD">NGDPD</option>
+                <option value="NGDPDPC">NGDPDPC</option>
+                <option value="NGDPPC">NGDPPC</option>
+                <option value="NGDPRPC">NGDPRPC</option>
+                <option value="NGDPRPPPPC">NGDPRPPPPC</option>
+                <option value="NGDP_D">NGDP_D</option>
+                <option value="NGDP_FY">NGDP_FY</option>
+                <option value="NGDP_R">NGDP_R</option>
+                <option value="NGDP_RPCH">NGDP_RPCH</option>
+                <option value="NGSD_NGDP">NGSD_NGDP</option>
+                <option value="NID_NGDP">NID_NGDP</option>
+                <option value="PCPI">PCPI</option>
+                <option value="PCPIE">PCPIE</option>
+                <option value="PCPIEPCH">PCPIEPCH</option>
+                <option value="PCPIPCH">PCPIPCH</option>
+                <option value="PPPEX">PPPEX</option>
+                <option value="PPPGDP">PPPGDP</option>
+                <option value="PPPPC">PPPPC</option>
+                <option value="PPPSH">PPPSH</option>
+                <option value="TMG_RPCH">TMG_RPCH</option>
+                <option value="TM_RPCH">TM_RPCH</option>
+                <option value="TXG_RPCH">TXG_RPCH</option>
+                <option value="TX_RPCH">TX_RPCH</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- aggregate option for QS indicators -->
+        <div class="dropdown-inline" id="dropdownInline">
+          <label for="aggregateSelect">QS Aggregation Method: </label>
+          <select id="aggregateSelect">
+            <option value="mean">Mean</option>
+            <option value="median">Median</option>
+            <option value="max">Max</option>
+            <option value="min">Min</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- right: Bar + Line Chart & search country -->
+    <div class="chart-right">
+      <div class="barLineChartContainer" id="barLineChartContainer">
+        <svg id="barLineChart"></svg>
+      </div>
+
+      <!-- search country -->
+      <div class="dropdown-container" id="dropdownContainer">
+        <span>Search Country</span>
+        <input type="text" id="searchDropdownInput" placeholder="Enter Country Name..." />
+        <ul id="dropdownList" class="dropdown-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- description -->
+  <div class="description">
+    <div class="description-tabs">
+      <button class="tab-button active" data-tab="intro">Introduction</button>
+      <button class="tab-button" data-tab="qs">Student Mobility and QS Ranking</button>
+      <button class="tab-button" data-tab="econ">Student Mobility and Economy Indicators</button>
+      <button class="tab-button" data-tab="continent">Focus on Continents</button>
+      <button class="tab-button" data-tab="info">Data Information</button>
+      <button class="tab-button" onclick="startTour()">How to Use?</button>
+    </div>
+
+    <div class="description-content" id="descriptionContent"></div>
+  </div>
+
+  <div id="weoModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2>WEO Subject Code Explanation</h2>
+      <table id="weoTable">
+        <thead>
+          <tr><th>Code</th><th>Description</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tourOverlay" style="display:none;">
+    <div id="tourDialog">
+      <p id="tourText"></p>
+      <div id="tourButtons">
+        <button id="tourPrev">Previous</button>
+        <button id="tourNext">Next</button>
+        <button id="tourEnd">End Tour</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tooltip" style="position: absolute; visibility: hidden; background: #eee; padding: 8px; border-radius: 4px; font-size: 12px; box-shadow: 0 0 5px rgba(0,0,0,0.2);"></div>
+
+  <!-- Import JavaScript modules -->
+  <script src="js-config.js"></script>
+  <script src="js-dataLoader.js"></script>
+  <script src="js-utils.js"></script>
+  <script src="js-bubbleChart.js"></script>
+  <script src="js-barLineChart.js"></script>
+  <script src="js-searchDropdown.js"></script>
+  <script src="js-tabContent.js"></script>
+  <script src="js-weoModal.js"></script>
+  <script src="js-tourGuide.js"></script>
+  <script src="js-main.js"></script>
+</body>
+</html>
