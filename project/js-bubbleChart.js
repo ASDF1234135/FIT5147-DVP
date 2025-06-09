@@ -99,14 +99,10 @@ function drawBubbleChart(data, xLabel, yLabel, sizeLabel) {
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  const chartTitle = `${yLabel.toUpperCase()} vs ${xLabel.toUpperCase()}`;
+  const chartTitle = `The relationship between ${yLabel in sizeLegendLabel ? sizeLegendLabel[yLabel] : yLabel} 
+                        and ${xLabel in sizeLegendLabel ? sizeLegendLabel[xLabel] : xLabel} from 2022-2024`;
 
-  svg.append("text")
-    .attr("x", width * 0.4)
-    .attr("y", margin.top / 3)
-    .attr("text-anchor", "middle")
-    .attr("font-size", "16px")
-    .attr("font-weight", "bold")
+  d3.select("#bubbleChartTitle")
     .text(chartTitle);
 
   // Drawing bubbles

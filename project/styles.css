@@ -29,7 +29,8 @@ body {
 }
 
 .chart-title {
-  font-size: 1.5em;
+  font-size: 1.2em;
+  font-weight: 500;
   margin-bottom: 10px;
   color: #34495e;
   text-align: center;
@@ -148,15 +149,6 @@ svg {
 
 .dropdown-list li:hover {
   background-color: #f0f0f0;
-}
-
-#bubbleChartTitle {
-  display: block;
-  text-align: center;
-  font-size: 1.5em;
-  font-weight: bold;
-  margin-bottom: 0.1em;
-  margin-top: 0.1em;
 }
 
 #barLineChartContainer {

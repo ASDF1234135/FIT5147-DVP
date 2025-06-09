@@ -52,6 +52,8 @@ let currentTarget = null;
 
 // Start the tour
 function startTour() {
+  currentStep = 0;
+
   window.scrollTo({
     top: 100,
     behavior: "smooth"
@@ -188,7 +190,3 @@ function startTour() {
   showStep(currentStep);
 }
 
-// Set up tour guide event listeners
-function setupTourGuide() {
-  // Tour is started by the "How to Use?" button which calls startTour directly
-}

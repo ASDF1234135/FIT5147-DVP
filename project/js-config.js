@@ -21,7 +21,7 @@ const continentColorMap = {
 
 // Display indicator names
 const sizeLegendLabel = {
-  "net_flow": "International Student net Flow",
+  "net_flow": "International Student Net Flow",
   "inflow": "International Student Inflow",
   "rank_display": "Average University Rank",
   "ar_score": "Academic Reputation",

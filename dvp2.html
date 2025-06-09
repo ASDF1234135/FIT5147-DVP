@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DVP Dashboard</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    * {
+    box-sizing: border-box;
+    }
+
+    body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    }
+
+    .dashboard {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    min-height: 80vh;
+    background-color: #f5f5f5;
+    gap: 1rem;
+    padding: 1rem;
+    }
+
+    .main-title {
+      font-size: 1.5em;
+      text-align: center;
+      margin: 20px 0;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .chart-title {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+      color: #34495e;
+      text-align: center;
+    }
+
+
+    .chart-left, .chart-right {
+    flex: 1 1 100%;
+    }
+
+    @media (min-width: 768px) {
+    .chart-left {
+        flex: 6.5;
+    }
+
+    .chart-right {
+        flex: 3.5;
+    }
+    }
+
+    .chart-left, .chart-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+    }
+
+    #bubbleChartWrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 5 / 3;
+    height: auto; 
+    overflow: hidden; 
+    }
+
+    #bubbleChart {
+    width: 100%;
+    height: 100%;
+    }
+
+    #xControl, #yControl {
+    position: absolute;
+    z-index: 10;
+    }
+
+    #xControl {
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    }
+
+    #yControl {
+    top: 50%;
+    left: 0.5rem;
+    transform: translateY(-50%);
+    writing-mode: vertical-rl;
+    text-align: center;
+    }
+
+    .barline-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    pointer-events: none;
+    visibility: hidden;
+    z-index: 1000;
+    }
+
+    svg {
+    width: 100%;
+    height: auto;
+    max-height: 90%;
+    }
+
+    .description {
+    padding: 1rem 2rem;
+    background-color: #ffffff;
+    border-top: 1px solid #ccc;
+    overflow-y: auto;
+    }
+
+    .dropdown-container {
+    width: 100%;
+    max-width: 300px;
+    }
+
+    #searchDropdownInput {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    }
+
+    .dropdown-list {
+    position: absolute;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-top: none;
+    background-color: white;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: none;
+    z-index: 999;
+    }
+
+    .dropdown-list li {
+    padding: 0.5rem;
+    cursor: pointer;
+    }
+
+    .dropdown-list li:hover {
+    background-color: #f0f0f0;
+    }
+
+    #bubbleChartTitle {
+    display: block;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 0.1em;
+    margin-top: 0.1em;
+    }
+
+    #barLineChartContainer {
+    width: 100%;
+    max-width: 700px;
+    margin: auto;
+    aspect-ratio: 1 / 1;
+    padding: 1em;
+    }
+
+    svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    }
+
+    .dropdown-container {
+    position: relative;
+    max-width: 100%;
+    width: 300px;
+    }
+
+    #dropdownList {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    background-color: white;
+    z-index: 10;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+    }
+
+    #dropdownList li {
+    list-style: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; 
+    }
+
+    .description-tabs {
+      margin-bottom: 10px;
+    }
+    .tab-button {
+      padding: 8px 16px;
+      margin-right: 4px;
+      border: 1px solid #aaa;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .tab-button.active {
+      background-color: #007acc;
+      color: white;
+      font-weight: bold;
+    }
+    .description-content h2 {
+      margin-top: 0;
+    }
+
+    .action-button-group {
+      margin-top: 1em;
+      display: flex;
+      gap: 1em; 
+      flex-wrap: wrap; 
+    }
+
+    .action-button {
+      padding: 8px 10px;
+      font-size: 14px;
+      background-color: #0c2b4d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .action-button:hover {
+      background-color: #0056b3;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      max-height: 80vh;
+      overflow-y: auto;
+      width: 80%;
+    }
+
+    .close-button {
+      float: right;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    table#weoTable {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    #weoTable th, #weoTable td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    #tourOverlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 9998;
+    }
+
+    #tourDialog {
+      position: absolute;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      z-index: 9999;
+      max-width: 300px;
+    }
+
+    .tour-highlight {
+      position: relative;
+      z-index: 10000;
+      box-shadow: 0 0 0 4px rgba(255, 255, 0, 0.7);
+      transition: box-shadow 0.3s;
+    }
+
+
+  </style>
+</head>
+<body>
+  <!-- Dashboard  -->
+  <h1 class="main-title">Relationship between QS Rankings, International Student Mobility, and National Economic indicators (2022-2024)</h1>
+  <div class="dashboard">
+    <!-- left: Bubble Chart  -->
+    <div class="chart-left">
+      <span class="chart-title">Interactive Bubble Chart</span>
+      <div id="bubbleChartWrapper" class="bubbleChartContainer">
+        <svg id="bubbleChart"></svg>
+
+        <!-- X axis -->
+        <div id="xControl" class="axis-control">
+          <label>
+            <select id="xSelect">
+              <optgroup label="Student Indicators">
+                <option value="net_flow">student net flow</option>
+                <option value="inflow">student inflow</option>
+              </optgroup>
+              <optgroup label="QS Indicators">
+                <option value="rank_display">University Rank</option>
+                <option value="qs_count">QS-Ranked Universities Count</option>
+                <option value="ar_score">Academic Reputation</option>
+                <option value="er_score">Employer Reputation</option>
+                <option value="fsr_score">Faculty Student Ratio</option>
+                <option value="cpf_score">Citations per Faculty</option>
+                <option value="ifr_score">International Faculty Ratio</option>
+                <option value="isr_score">International Student Ratio</option>
+                <option value="irn_score">International Research Network</option>
+                <option value="ger_score">Employment Outcomes</option>
+                <option value="Overall_Score">Overall Score</option>
+              </optgroup>
+              <optgroup label="WEO Indicators">
+                <option value="BCA">BCA</option>
+                <option value="BCA_NGDPD">BCA_NGDPD</option>
+                <option value="GGR">GGR</option>
+                <option value="GGR_NGDP">GGR_NGDP</option>
+                <option value="GGSB">GGSB</option>
+                <option value="GGSB_NPGDP">GGSB_NPGDP</option>
+                <option value="GGX">GGX</option>
+                <option value="GGXCNL">GGXCNL</option>
+                <option value="GGXCNL_NGDP">GGXCNL_NGDP</option>
+                <option value="GGXONLB">GGXONLB</option>
+                <option value="GGXONLB_NGDP">GGXONLB_NGDP</option>
+                <option value="GGXWDG">GGXWDG</option>
+                <option value="GGXWDG_NGDP">GGXWDG_NGDP</option>
+                <option value="GGXWDN">GGXWDN</option>
+                <option value="GGXWDN_NGDP">GGXWDN_NGDP</option>
+                <option value="GGX_NGDP">GGX_NGDP</option>
+                <option value="LE">LE</option>
+                <option value="LP">LP</option>
+                <option value="LUR">LUR</option>
+                <option value="NGAP_NPGDP">NGAP_NPGDP</option>
+                <option value="NGDP">NGDP</option>
+                <option value="NGDPD">NGDPD</option>
+                <option value="NGDPDPC">NGDPDPC</option>
+                <option value="NGDPPC">NGDPPC</option>
+                <option value="NGDPRPC">NGDPRPC</option>
+                <option value="NGDPRPPPPC">NGDPRPPPPC</option>
+                <option value="NGDP_D">NGDP_D</option>
+                <option value="NGDP_FY">NGDP_FY</option>
+                <option value="NGDP_R">NGDP_R</option>
+                <option value="NGDP_RPCH">NGDP_RPCH</option>
+                <option value="NGSD_NGDP">NGSD_NGDP</option>
+                <option value="NID_NGDP">NID_NGDP</option>
+                <option value="PCPI">PCPI</option>
+                <option value="PCPIE">PCPIE</option>
+                <option value="PCPIEPCH">PCPIEPCH</option>
+                <option value="PCPIPCH">PCPIPCH</option>
+                <option value="PPPEX">PPPEX</option>
+                <option value="PPPGDP">PPPGDP</option>
+                <option value="PPPPC">PPPPC</option>
+                <option value="PPPSH">PPPSH</option>
+                <option value="TMG_RPCH">TMG_RPCH</option>
+                <option value="TM_RPCH">TM_RPCH</option>
+                <option value="TXG_RPCH">TXG_RPCH</option>
+                <option value="TX_RPCH">TX_RPCH</option>
+              </optgroup>
+            </select>
+          </label>
+        </div>
+
+        <!-- Y axis -->
+        <div id="yControl" class="axis-control">
+          <label>
+            <select id="ySelect">
+              <optgroup label="Student Indicators">
+                <option value="net_flow">student net flow</option>
+                <option value="inflow">student inflow</option>
+              </optgroup>
+              <optgroup label="QS Indicators">
+                <option value="rank_display">University Rank</option>
+                <option value="qs_count">QS-Ranked Universities Count</option>
+                <option value="ar_score">Academic Reputation</option>
+                <option value="er_score">Employer Reputation</option>
+                <option value="fsr_score">Faculty Student Ratio</option>
+                <option value="cpf_score">Citations per Faculty</option>
+                <option value="ifr_score">International Faculty Ratio</option>
+                <option value="isr_score">International Student Ratio</option>
+                <option value="irn_score">International Research Network</option>
+                <option value="ger_score">Employment Outcomes</option>
+                <option value="Overall_Score">Overall Score</option>
+              </optgroup>
+              <optgroup label="WEO Indicators">
+                <option value="BCA">BCA</option>
+                <option value="BCA_NGDPD">BCA_NGDPD</option>
+                <option value="GGR">GGR</option>
+                <option value="GGR_NGDP">GGR_NGDP</option>
+                <option value="GGSB">GGSB</option>
+                <option value="GGSB_NPGDP">GGSB_NPGDP</option>
+                <option value="GGX">GGX</option>
+                <option value="GGXCNL">GGXCNL</option>
+                <option value="GGXCNL_NGDP">GGXCNL_NGDP</option>
+                <option value="GGXONLB">GGXONLB</option>
+                <option value="GGXONLB_NGDP">GGXONLB_NGDP</option>
+                <option value="GGXWDG">GGXWDG</option>
+                <option value="GGXWDG_NGDP">GGXWDG_NGDP</option>
+                <option value="GGXWDN">GGXWDN</option>
+                <option value="GGXWDN_NGDP">GGXWDN_NGDP</option>
+                <option value="GGX_NGDP">GGX_NGDP</option>
+                <option value="LE">LE</option>
+                <option value="LP">LP</option>
+                <option value="LUR">LUR</option>
+                <option value="NGAP_NPGDP">NGAP_NPGDP</option>
+                <option value="NGDP">NGDP</option>
+                <option value="NGDPD">NGDPD</option>
+                <option value="NGDPDPC">NGDPDPC</option>
+                <option value="NGDPPC">NGDPPC</option>
+                <option value="NGDPRPC">NGDPRPC</option>
+                <option value="NGDPRPPPPC">NGDPRPPPPC</option>
+                <option value="NGDP_D">NGDP_D</option>
+                <option value="NGDP_FY">NGDP_FY</option>
+                <option value="NGDP_R">NGDP_R</option>
+                <option value="NGDP_RPCH">NGDP_RPCH</option>
+                <option value="NGSD_NGDP">NGSD_NGDP</option>
+                <option value="NID_NGDP">NID_NGDP</option>
+                <option value="PCPI">PCPI</option>
+                <option value="PCPIE">PCPIE</option>
+                <option value="PCPIEPCH">PCPIEPCH</option>
+                <option value="PCPIPCH">PCPIPCH</option>
+                <option value="PPPEX">PPPEX</option>
+                <option value="PPPGDP">PPPGDP</option>
+                <option value="PPPPC">PPPPC</option>
+                <option value="PPPSH">PPPSH</option>
+                <option value="TMG_RPCH">TMG_RPCH</option>
+                <option value="TM_RPCH">TM_RPCH</option>
+                <option value="TXG_RPCH">TXG_RPCH</option>
+                <option value="TX_RPCH">TX_RPCH</option>
+              </optgroup>
+            </select>
+          </label>
+        </div>
+      </div>
+
+
+      <!-- additional options -->
+      <div class="bubble-options">
+        <!-- display country tags -->
+        <label id="toggleLabelsElement">
+          <input type="checkbox" id="toggleLabels" checked />
+          Display Country Tags
+        </label>
+
+        <!-- bubble size -->
+        <div class="dropdown-inline">
+          <label for="sizeSelect">Size Option: </label>
+          <select id="sizeSelect">
+            <option value="disabled"> --Disable Size-- </option>
+            <optgroup label="Student Indicators">
+                <option value="net_flow">student net flow</option>
+                <option value="inflow">student inflow</option>
+            </optgroup>
+            <optgroup label="QS Indicators">
+                <option value="rank_display">University Rank</option>
+                <option value="qs_count">QS-Ranked Universities Count</option>
+                <option value="ar_score">Academic Reputation</option>
+                <option value="er_score">Employer Reputation</option>
+                <option value="fsr_score">Faculty Student Ratio</option>
+                <option value="cpf_score">Citations per Faculty</option>
+                <option value="ifr_score">International Faculty Ratio</option>
+                <option value="isr_score">International Student Ratio</option>
+                <option value="irn_score">International Research Network</option>
+                <option value="ger_score">Employment Outcomes</option>
+                <option value="Overall_Score">Overall Score</option>
+            </optgroup>
+            <optgroup label="WEO Indicators">
+                <option value="BCA">BCA</option>
+                <option value="BCA_NGDPD">BCA_NGDPD</option>
+                <option value="GGR">GGR</option>
+                <option value="GGR_NGDP">GGR_NGDP</option>
+                <option value="GGSB">GGSB</option>
+                <option value="GGSB_NPGDP">GGSB_NPGDP</option>
+                <option value="GGX">GGX</option>
+                <option value="GGXCNL">GGXCNL</option>
+                <option value="GGXCNL_NGDP">GGXCNL_NGDP</option>
+                <option value="GGXONLB">GGXONLB</option>
+                <option value="GGXONLB_NGDP">GGXONLB_NGDP</option>
+                <option value="GGXWDG">GGXWDG</option>
+                <option value="GGXWDG_NGDP">GGXWDG_NGDP</option>
+                <option value="GGXWDN">GGXWDN</option>
+                <option value="GGXWDN_NGDP">GGXWDN_NGDP</option>
+                <option value="GGX_NGDP">GGX_NGDP</option>
+                <option value="LE">LE</option>
+                <option value="LP">LP</option>
+                <option value="LUR">LUR</option>
+                <option value="NGAP_NPGDP">NGAP_NPGDP</option>
+                <option value="NGDP">NGDP</option>
+                <option value="NGDPD">NGDPD</option>
+                <option value="NGDPDPC">NGDPDPC</option>
+                <option value="NGDPPC">NGDPPC</option>
+                <option value="NGDPRPC">NGDPRPC</option>
+                <option value="NGDPRPPPPC">NGDPRPPPPC</option>
+                <option value="NGDP_D">NGDP_D</option>
+                <option value="NGDP_FY">NGDP_FY</option>
+                <option value="NGDP_R">NGDP_R</option>
+                <option value="NGDP_RPCH">NGDP_RPCH</option>
+                <option value="NGSD_NGDP">NGSD_NGDP</option>
+                <option value="NID_NGDP">NID_NGDP</option>
+                <option value="PCPI">PCPI</option>
+                <option value="PCPIE">PCPIE</option>
+                <option value="PCPIEPCH">PCPIEPCH</option>
+                <option value="PCPIPCH">PCPIPCH</option>
+                <option value="PPPEX">PPPEX</option>
+                <option value="PPPGDP">PPPGDP</option>
+                <option value="PPPPC">PPPPC</option>
+                <option value="PPPSH">PPPSH</option>
+                <option value="TMG_RPCH">TMG_RPCH</option>
+                <option value="TM_RPCH">TM_RPCH</option>
+                <option value="TXG_RPCH">TXG_RPCH</option>
+                <option value="TX_RPCH">TX_RPCH</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- aggregate option for QS indicators -->
+        <div class="dropdown-inline" id="dropdownInline">
+          <label for="aggregateSelect">QS Aggregation Method: </label>
+          <select id="aggregateSelect">
+            <option value="mean">Mean</option>
+            <option value="median">Median</option>
+            <option value="max">Max</option>
+            <option value="min">Min</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- right: Bar + Line Chart & search country -->
+    <div class="chart-right">
+      <div class="barLineChartContainer" id="barLineChartContainer">
+        <svg id="barLineChart"></svg>
+      </div>
+
+      <!-- search country -->
+      <div class="dropdown-container" id="dropdownContainer">
+        <span>Search Country</span>
+        <input type="text" id="searchDropdownInput" placeholder="Enter Country Name..." />
+        <ul id="dropdownList" class="dropdown-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- description -->
+  <div class="description">
+    <div class="description-tabs">
+      <button class="tab-button active" data-tab="intro">Introduction</button>
+      <button class="tab-button" data-tab="qs">Student Mobility and QS Ranking</button>
+      <button class="tab-button" data-tab="econ">Student Mobility and Economy Indicators</button>
+      <button class="tab-button" data-tab="continent">Focus on Continents</button>
+      <button class="tab-button" data-tab="info">Data Infomation</button>
+      <bubbon class="tab-button" onclick="startTour()">How to Use?</bubbon>
+    </div>
+
+    <div class="description-content" id="descriptionContent"></div>
+  </div>
+
+  <div id="weoModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2>WEO Subject Code Explanation</h2>
+      <table id="weoTable">
+        <thead>
+          <tr><th>Code</th><th>Description</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tourOverlay" style="display:none;">
+    <div id="tourDialog">
+      <p id="tourText"></p>
+      <div id="tourButtons">
+        <button id="tourPrev">Previous</button>
+        <button id="tourNext">Next</button>
+        <button id="tourEnd">End Tour</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let inFlowData = [];
+    let netFlowData = [];
+    let WEOData = [];
+    let QSData = [];
+    let countryList = [];
+    let activeContinents = new Set(["Asia", "Europe", "Africa", "Oceania", "Americas"]);
+    let selectedCountryCode = 'AUS';
+
+    // read all data
+    Promise.all([
+      d3.csv("https://raw.githubusercontent.com/ASDF1234135/FIT5147-DVP/main/data/inbound.csv", d => ({ ISO: d.geoUnit, Country: d.country, continent: d.continent, year: +d.year, inflow: +d.value })),
+      d3.csv("https://raw.githubusercontent.com/ASDF1234135/FIT5147-DVP/main/data/net_flow.csv", d => ({ ISO: d.geoUnit, Country: d.country, continent: d.continent, year: +d.year, net_flow: +d.value })),
+      d3.csv("https://raw.githubusercontent.com/ASDF1234135/FIT5147-DVP/main/data/WEO_cleaned.csv", d => {
+        const obj = { ISO: d.ISO, Country: d.Country, continent: d.continent };
+        Object.keys(d).forEach(key => {
+          if (key !== "ISO" && key !== "Country" && key !== "continent") {
+            obj[key] = +d[key];
+          }
+        });
+        return obj;
+      }),
+      d3.csv("https://raw.githubusercontent.com/ASDF1234135/FIT5147-DVP/main/data/QS_cleaned.csv", d => {
+        const obj = {institution: d.institution, ISO: d.location_code, Country: d.location, continent: d.continent}
+        Object.keys(d).forEach(key => {
+          if (key !== "institution" && key !== "location_code" && key !== "location" && key !== "continent") {
+            obj[key] = +d[key];
+          }
+        })
+        return obj;
+      })
+    ]).then(([inFlow, netFlow, weo, qs]) => {
+      inFlowData = inFlow;
+      netFlowData = netFlow;
+      WEOData = weo;
+      QSData = qs;
+
+      console.log(WEOData);
+
+      countryList = Array.from(
+        new Map(WEOData.map(d => [d.ISO, d.Country])).entries()
+      ).map(([ISO, Country]) => ({ ISO, Country })).sort((a, b) => a.Country.localeCompare(b.Country));
+
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+
+    // setup tooltip
+    const tooltip = d3.select("body")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("position", "absolute")
+      .style("visibility", "hidden")
+      .style("background", "rgba(0,0,0,0.7)")
+      .style("color", "#fff")
+      .style("padding", "5px 10px")
+      .style("border-radius", "5px")
+      .style("font-size", "12px");
+
+    // define the color for continents
+    const continentColorMap = {
+      "Asia": "#1f77b4",
+      "Europe": "#ff7f0e",
+      "Africa": "#2ca02c",
+      "Oceania": "#d62728",
+      "Americas": "#9467bd"
+    };
+
+
+    // Aggregate for QS data
+    function aggregate(values, method) {
+      values = values.filter(v => !isNaN(v)); 
+      if (values.length === 0) return 0;
+      switch (method) {
+        case "mean":
+          return d3.mean(values);
+        case "median":
+          return d3.median(values);
+        case "max":
+          return d3.max(values);
+        case "min":
+          return d3.min(values);
+        default:
+          return 0;
+      }
+    }
+
+    // display Indicator names
+    const sizeLegendLabel = {
+        "net_flow": "Intenational Student net Flow",
+        "inflow": "Intenational Student Inflow",
+        "rank_display": "Average University Rank",
+        "ar_score": "Academic Reputation",
+        "er_score": "Employer Reputation",
+        "fsr_score": "Faculty Student Ratio",
+        "cpf_score": "Citations per Faculty",
+        "ifr_score": "International Faculty Ratio",
+        "isr_score": "International Student Ratio",
+        "irn_score": "International Research Network",
+        "ger_score": "Employment Outcomes",
+        "Overall_Score": "QS Overall Score"
+      };
+
+
+    // data preparation for drawing bubble chart
+    function updateBubbleChart() {
+      // get all properties
+      xVar = d3.select("#xSelect").property("value");
+      xGroup = d3.select("#xSelect").node().selectedOptions[0].parentNode.label;
+      yVar = d3.select("#ySelect").property("value");
+      yGroup = d3.select("#ySelect").node().selectedOptions[0].parentNode.label;
+      sizeVar = d3.select("#sizeSelect").property("value");
+      sizeGroup = d3.select("#sizeSelect").node().selectedOptions[0].parentNode.label;
+      aggregateMethod = d3.select("#aggregateSelect").property("value");
+      
+      // data processing
+      function getData(value, group) {
+        let data;
+        if (value == 'disabled') return null;
+
+        if (value === 'net_flow') {
+          data = netFlowData;
+        } else if (value === 'inflow') {
+          data = inFlowData;
+        } else if (group === 'QS Indicators') {
+          data = QSData;
+        } else {
+          data = WEOData;
+        }
+
+        if (group === 'QS Indicators'){
+          const qsList = []
+          const groupedByCountryYear = d3.group(data, d => d.ISO, d => d.year); 
+          groupedByCountryYear.forEach((yearData, countryCode) => {
+            yearData.forEach((entries, year) => {
+              const continent = entries[0]?.continent || "Unknown";
+              const country = entries[0]?.Country || "Unknown";
+              if (value !== 'qs_count'){
+                let values = entries.map(e => {
+                  return +e[value];
+                });
+                qsList.push({ISO: countryCode, year: year, [value]:aggregate(values, aggregateMethod), continent: continent, Country: country})
+              }
+              else{
+                qsList.push({ISO: countryCode, year: year, [value]:entries.length, continent: continent, Country: country})
+              }
+
+            });
+            });          
+          data = qsList;
+        }
+        return data;
+      }
+
+      let xSelectData = getData(xVar, xGroup);
+      let ySelectData = getData(yVar, yGroup);
+      let sizeSelectData = getData(sizeVar, sizeGroup);
+
+      // console.log("x", xSelectData);
+
+      let rScale;
+
+      // set up size scale
+      if (sizeVar !== "disabled") {
+        const validRValues = sizeSelectData
+          .filter(d => !isNaN(d[sizeVar]))
+          .map(d => +d[sizeVar]);
+
+        if (validRValues.length > 0) {
+          const rExtent = d3.extent(validRValues); // [min, max]
+
+          rScale = d3.scaleLinear()
+            .domain(rExtent)
+            .range([6, 40]);
+        }
+      }
+
+      // merge x-axis and y-axis data
+      const mergedData = ySelectData.map(d => {
+        const match = xSelectData.find(w => w.ISO === d.ISO && w.year === d.year);
+        if (!match) return null;
+        const sizeEntry = sizeSelectData ? sizeSelectData.find(w => w.ISO === d.ISO) : null;
+        const sizeValue = sizeEntry ? sizeEntry[sizeVar] : null;
+        let r = 6;
+        if (sizeVar !== "disabled" && sizeValue !== undefined && rScale) {
+          r = rScale(sizeValue);
+        }
+        const item = {
+          ISO: d.ISO,
+          year: d.year,
+          x: match[xVar],
+          y: d[yVar],
+          r,
+          sizeValue,
+          country: d.Country,
+          continent: d.continent
+        };
+        return item;
+      }).filter(d => d && !isNaN(d.x) && !isNaN(d.y));
+
+      drawBubbleChart(mergedData, xVar, yVar, sizeVar);
+    }
+
+    // drawing bubble chart
+    function drawBubbleChart(data, xLabel, yLabel, sizeLabel) {
+      // console.log(data);
+      const container = d3.select("#bubbleChartWrapper").node();
+      const { width, height } = container.getBoundingClientRect();
+
+      // set up margin
+      const margin = { top: 30, right: 150, bottom: 30 , left: 60 };
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+
+      d3.select("#bubbleChart").selectAll("*").remove();
+    
+      const labelVisibility = d3.select("#toggleLabels").property("checked");
+
+      // set up axis scale
+      const xExtent = d3.extent(data, d => d.x);
+      const yExtent = d3.extent(data, d => d.y);
+      const xPadding = (xExtent[1] - xExtent[0]) * 0.2;
+      const yPadding = (yExtent[1] - yExtent[0]) * 0.2;
+      const xScale = d3.scaleLinear()
+        .domain([xExtent[0] - xPadding, xExtent[1] + xPadding])
+        .range([0, innerWidth]);
+      const yScale = d3.scaleLinear()
+        .domain([yExtent[0] - yPadding, yExtent[1] + yPadding])
+        .range([innerHeight, 0]);
+
+      // start drawing
+      const svg = d3.select("#bubbleChart")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      const chartTitle = `${yLabel.toUpperCase()} vs ${xLabel.toUpperCase()}`;
+
+      svg.append("text")
+        .attr("x", width * 0.4)
+        .attr("y", margin.top / 3)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "16px")
+        .attr("font-weight", "bold")
+        .text(chartTitle);
+
+      // drawing bubbles
+      svg.selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("cx", d => xScale(d.x))
+        .attr("cy", d => yScale(d.y))
+        .attr("r", d => d.r)
+        .attr("fill", d => continentColorMap[d.continent])
+        .attr("display", d => activeContinents.has(d.continent) ? "" : "none")
+        .attr("opacity", 0.7)
+        .on("mouseover", function (event, d) {
+          const xLabelText = d3.select("#xSelect").property("value");
+          const yLabelText = d3.select("#ySelect").property("value");
+          const sizeLabelText = d3.select("#sizeSelect").property("value");
+
+          if (sizeLabelText !== "disabled"){
+            tooltip.style("visibility", "visible")
+              .html(`
+                <strong>${d.country} - ${d.year}</strong><br/>
+                ${xLabelText}: ${Math.round(d.x * 10000) / 10000}<br/>
+                ${yLabelText}: ${Math.round(d.y * 10000) / 10000}<br/>
+                ${sizeLabelText}: ${Math.round(d.sizeValue * 10000) / 10000}
+              `)
+            .style("left", ( d3.pointer(event, document.getElementById("content"))[0] + 10) + "px")
+            .style("top", ( d3.pointer(event, document.getElementById("content"))[1]) + "px");
+          }
+          else{
+            tooltip.style("visibility", "visible")
+              .html(`
+                <strong>${d.country} - ${d.year}</strong><br/>
+                ${xLabelText}: ${Math.round(d.x * 10000) / 10000}<br/>
+                ${yLabelText}: ${Math.round(d.y * 10000) / 10000}
+              `)
+            .style("left", ( d3.pointer(event, document.getElementById("content"))[0] + 10) + "px")
+            .style("top", ( d3.pointer(event, document.getElementById("content"))[1]) + "px");
+          }
+
+
+          d3.select(this)
+            .attr("stroke", "red")
+            .attr("stroke-width", 2);
+        })
+        .on("mousemove", function (event) {
+          tooltip.style("top", (event.pageY + 10) + "px")
+            .style("left", (event.pageX + 10) + "px");
+        })
+        .on("mouseout", function () {
+          tooltip.style("visibility", "hidden");
+          d3.select(this).attr("stroke-width", 0);
+        }).on("click", function(event, d) {
+          updateBarLineChart(d.ISO);
+          selectedCountryCode = d.ISO;
+        });
+
+      // drawing axis
+      svg.append("g")
+        .attr("transform", `translate(0, ${innerHeight})`)
+        .call(d3.axisBottom(xScale));
+      svg.append("g")
+        .call(d3.axisLeft(yScale));
+
+      // add country tags
+      if (document.getElementById("toggleLabels").checked) {
+        svg.selectAll(".label-text")
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("class", "label-text")
+            .attr("display", d => activeContinents.has(d.continent) ? "" : "none")
+            .attr("x", d => xScale(d.x))
+            .attr("y", d => yScale(d.y))
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .attr("font-size", "12px")
+            .attr("fill", "black")
+            .style("pointer-events", "none")
+            .text(d => `${d.country} ${d.year}`);
+        }
+
+      // add legend
+      const legendPadding = 10;
+      const legend = svg.append("g")
+        .attr("class", "legend")
+        .attr("transform", `translate(${innerWidth +30}, ${legendPadding})`);
+
+      const continents = Object.keys(continentColorMap);
+
+      continents.forEach((continent, i) => {
+        const legendItem = legend.append("g")
+            .attr("class", "legend-item")
+            .attr("transform", `translate(0, ${i * 22})`)
+            .style("cursor", "pointer")
+            .on("click", function () {
+            if (activeContinents.has(continent)) {
+                activeContinents.delete(continent);
+            } else {
+                activeContinents.add(continent);
+            }
+            updateBubbleChart(); 
+            });
+
+        legendItem.append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 6)
+            .style("fill", activeContinents.has(continent) ? continentColorMap[continent] : "#ccc");
+
+        legendItem.append("text")
+            .attr("x", 10)
+            .attr("y", 4)
+            .text(continent)
+            .style("font-size", "12px")
+            .attr("alignment-baseline", "middle");
+        });
+    
+  
+      // change bubble size (if applicable)
+      const rValues = d3.extent(data, d => d.sizeValue);
+      const [minR, maxR] = rValues;
+      const meanR = (minR + maxR) / 2;
+
+      const sizeData = [
+        { label: "Max", value: maxR },
+        { label: "Mean", value: meanR },
+        { label: "Min", value: minR }
+        ];
+      const sizes = [40,23,6]
+      
+      // add size legend
+      const legendSizeGroup = svg.append("g")
+        .attr("class", "size-legend")
+        .attr("transform", `translate(${innerWidth + 20}, ${legendPadding + 250})`);
+    
+      legendSizeGroup.append("text")
+        .text("Bubble Size")
+        .attr("x", 0)
+        .attr("y", -80)
+        .attr("alignment-baseline", "middle")
+        .style("font-size", "12px")
+        .style("font-weight", "bold");
+
+    
+      sizeData.forEach((d, i) => {
+        const yOffset = i * 17;
+
+        legendSizeGroup.append("circle")
+            .attr("cx", 35)
+            .attr("cy", yOffset)
+            .attr("r", sizes[i])
+            .attr("fill", "none")
+            .attr("stroke", "#333");
+
+        if (sizeLabel !== "disabled") {
+            legendSizeGroup.append("text")
+            .attr("x", 20)
+            .attr("y", yOffset - sizes[i]/2)
+            .attr("alignment-baseline", "middle")
+            .style("font-size", "12px")
+            .text(`${Math.round(d.value * 10000) / 10000}`);
+        }
+      });
+      
+      // caculate regression line
+      function computeRegression(data) {
+        const filtered = data.filter(d => activeContinents.has(d.continent));
+        const n = filtered.length;
+        if (n === 0) return null;
+
+        const sumX = d3.sum(filtered, d => d.x);
+        const sumY = d3.sum(filtered, d => d.y);
+        const meanX = sumX / n;
+        const meanY = sumY / n;
+
+        const covXY = d3.sum(filtered, d => (d.x - meanX) * (d.y - meanY));
+        const varX = d3.sum(filtered, d => (d.x - meanX) ** 2);
+        const varY = d3.sum(filtered, d => (d.y - meanY) ** 2);
+
+        const slope = covXY / varX;
+        const intercept = meanY - slope * meanX;
+
+        const r = covXY / Math.sqrt(varX * varY);
+
+        return {
+          slope,
+          intercept,
+          r
+        };
+      }
+
+      // drawing regression line
+      const regression = computeRegression(data);
+      if (regression) {
+        const { slope, intercept, r } = regression;
+
+        const xMin = d3.min(data, d => d.x);
+        const xMax = d3.max(data, d => d.x);
+
+        const yMin = Math.max(slope * xMin + intercept, d3.min(data, d => d.y));
+        const yMax = Math.min(slope * xMax + intercept, d3.max(data, d => d.y));
+
+        svg.selectAll(".regression-line").remove();
+
+        svg.append("line")
+          .attr("class", "regression-line")
+          .attr("x1", xScale(xMin))
+          .attr("y1", yScale(yMin))
+          .attr("x2", xScale(xMax))
+          .attr("y2", yScale(yMax))
+          .attr("stroke", "red")
+          .attr("stroke-width", 2.5)
+          .attr("stroke-dasharray", "5,5");
+
+        // console.log("Pearson r:", r.toFixed(3));
+        svg.selectAll(".correlation-label").remove();
+
+        svg.append("text")
+          .attr("class", "correlation-label")
+          .attr("x", xScale(xMax)+20)
+          .attr("y", yScale(yMax)-20)
+          .style("fill", "red")
+          .style("font-size", "14px")
+          .text(`r = ${regression.r.toFixed(3)}`);
+      }
+
+
+    }
+
+    
+    // set up charts updating events
+    d3.select("#xSelect").on("change", function() {
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+    d3.select("#ySelect").on("change", function() {
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+    d3.select("#sizeSelect").on("change", function() {
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+    d3.select("#aggregateSelect").on("change", function() {
+      updateBubbleChart();
+      updateBarLineChart(selectedCountryCode);
+    });
+    d3.select("#toggleLabels").on("change", function() {
+      updateBubbleChart();
+    });
+
+
+    // updating data and drawing bar line chart
+    function updateBarLineChart(countryCode) {
+      // get propertiies
+      xVar = d3.select("#xSelect").property("value");
+      xGroup = d3.select("#xSelect").node().selectedOptions[0].parentNode.label;
+      yVar = d3.select("#ySelect").property("value");
+      yGroup = d3.select("#ySelect").node().selectedOptions[0].parentNode.label;
+      const aggregateMethod = d3.select("#aggregateSelect").property("value");
+
+      // data processing
+      function getData(value, group, iso) {
+        let data;
+        if (value == 'disabled') return null;
+
+        if (value === 'net_flow') {
+          data = netFlowData;
+        } else if (value === 'inflow') {
+          data = inFlowData;
+        } else if (group === 'QS Indicators') {
+          data = QSData;
+        } else {
+          data = WEOData;
+        }
+        data = data.filter(d => d.ISO == iso)
+
+        if (group === 'QS Indicators'){
+          const qsList = []
+          const groupedByCountry = d3.group(data, d => d.year);
+          // console.log(groupedByCountry);
+          groupedByCountry.forEach((entries, year) => {
+            const continent = entries[0]?.continent || "Unknown";
+            if(value !== "qs_count"){
+              let values = entries.map(e => {
+                return +e[value];
+                });
+                qsList.push({ISO: iso, year: year, [value]:aggregate(values, aggregateMethod), continent: continent})
+              }
+            else{
+                qsList.push({ISO: iso, year: year, [value]:entries.length, continent: continent})
+            }
+            }
+            );
+          data = qsList;
+        }
+        return data;
+      }
+
+      const xSelectData = getData(xVar, xGroup, countryCode);
+      const ySelectData = getData(yVar, yGroup, countryCode);
+
+
+      // combining data
+      const combined = [2022, 2023, 2024].map(year => {
+        const yData = ySelectData.find(d => +d.year === year);
+        const xData = xSelectData.find(d => +d.year === year);
+        return {
+          year: year.toString(),
+          yValue: yData ? Math.round(yData[yVar] * 10000) / 10000 : null,
+          xValue: xData ? Math.round(xData[xVar] * 10000) / 10000 : null
+        };
+      });
+      
+
+      // starting drawing
+      const container = d3.select("#barLineChartContainer").node();
+      const { width, height } = container.getBoundingClientRect();
+
+      //set up margin
+      const margin = { top: 40, right: 50, bottom: 40, left: 50 };
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+
+      const barLineSvg = d3.select("#barLineChart")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("preserveAspectRatio", "xMidYMid meet");
+
+      barLineSvg.selectAll("*").remove();
+      const g = barLineSvg
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      const xScale = d3.scaleBand()
+        .domain(combined.map(d => d.year))
+        .range([0, innerWidth])
+        .padding(0.2);
+
+      const y1Max = d3.max(combined, d => d.yValue);
+      const y2Max = d3.max(combined, d => d.xValue);
+      const y1Min = d3.min(combined, d => d.yValue);
+      const y2Min = d3.min(combined, d => d.xValue);
+      const y1diff = y1Max - y1Min;
+      const y2diff = y2Max - y2Min;
+      const y1Scale = d3.scaleLinear().domain([y1Min - 0.1 * y1diff, y1Max + 0.1 * y1diff]).range([innerHeight, 0]);
+      const y2Scale = d3.scaleLinear().domain([y2Min - 0.1 * y2diff, y2Max + 0.1 * y2diff]).range([innerHeight, 0]);
+
+      // console.log(y1Max, y1Min);
+      // console.log(y2Max, y2Min);
+
+      const countryName = countryList.find(w => w.ISO === countryCode).Country;
+      const chartTitle = `${yVar.toUpperCase()} vs ${xVar.toUpperCase()} in ${countryName}`;
+
+      barLineSvg.append("text")
+        .attr("x", width / 2)
+        .attr("y", margin.top / 2)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "16px")
+        .attr("font-weight", "bold")
+        .text(chartTitle);
+
+      // draw axis
+      g.append("g")
+        .attr("transform", `translate(0, ${innerHeight})`)
+        .call(d3.axisBottom(xScale));
+      g.append("g")
+        .call(d3.axisLeft(y1Scale).ticks(6));
+      g.append("text")
+        .attr("class", "y1-axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -innerHeight / 2)
+        .attr("y", -60)
+        .attr("text-anchor", "middle")
+        .style("font-weight", "bold")
+        .text(yVar in sizeLegendLabel ? sizeLegendLabel[yVar] : yVar);
+      g.append("g")
+        .attr("transform", `translate(${innerWidth}, 0)`)
+        .call(d3.axisRight(y2Scale).ticks(6));
+      g.append("text")
+        .attr("class", "y2-axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -innerHeight / 2)
+        .attr("y", innerWidth + 60)
+        .attr("text-anchor", "middle")
+        .style("font-weight", "bold")
+        .text(xVar in sizeLegendLabel ? sizeLegendLabel[xVar] : xVar);
+
+      
+      // draw bars
+      g.selectAll(".bar")
+        .data(combined)
+        .enter()
+        .append("rect")
+        .attr("x", d => xScale(d.year) + xScale.bandwidth() / 4)
+        .attr("y", d => y1Scale(d.yValue))
+        .attr("width", xScale.bandwidth() / 2)
+        .attr("height", d => innerHeight - y1Scale(d.yValue))
+        .attr("fill", "#69b3a2")
+        .on("mouseover", function(event, d) {
+          tooltip
+            .style("visibility", "visible")
+            .html(`
+              <strong>Year:</strong> ${d.year}<br/>
+              ${yVar}: ${d.yValue != null ? d.yValue : "NO DATA"}<br/>
+              ${xVar}: ${d.xValue != null ? d.xValue : "NO DATA"}
+            `);
+          d3.select(this).attr("fill", "#2a5673");
+        })
+        .on("mousemove", function(event) {
+          tooltip
+            .style("top", (event.pageY + 10) + "px")
+            .style("left", (event.pageX + 10) + "px");
+        })
+        .on("mouseout", function() {
+          tooltip.style("visibility", "hidden");
+          d3.select(this).attr("fill", "#69b3a2");
+        });
+
+      const line = d3.line()
+        .x(d => xScale(d.year) + xScale.bandwidth() / 2)
+        .y(d => y2Scale(d.xValue));
+
+      // draw ling and dot
+      g.append("path")
+        .datum(combined)
+        .attr("fill", "none")
+        .attr("stroke", "#ff6347")
+        .attr("stroke-width", 2)
+        .attr("d", line);
+
+      g.selectAll(".dot")
+        .data(combined.filter(d => d.xValue != null))
+        .enter()
+        .append("circle")
+        .attr("cx", d => xScale(d.year) + xScale.bandwidth() / 2)
+        .attr("cy", d => d.xValue != null ? y2Scale(d.xValue) : y2Scale(0))
+        .attr("r", 4)
+        .attr("fill", "#ff6347")
+        .on("mouseover", function(event, d) {
+          tooltip
+            .style("visibility", "visible")
+            .html(`
+              <strong>Year:</strong> ${d.year}<br/>
+              ${yVar}: ${d.yValue != null ? d.yValue : "NO DATA"}<br/>
+              ${xVar}: ${d.xValue != null ? d.xValue : "NO DATA"}
+            `);
+          d3.select(this).attr("r", 6).attr("fill", "#d8721d");
+        })
+        .on("mousemove", function(event) {
+          tooltip
+            .style("top", (event.pageY + 10) + "px")
+            .style("left", (event.pageX + 10) + "px");
+        })
+        .on("mouseout", function() {
+          tooltip.style("visibility", "hidden");
+          d3.select(this).attr("r", 4).attr("fill", "#ff6347");
+        });
+    }
+
+    const input = document.getElementById("searchDropdownInput");
+    const dropdown = document.getElementById("dropdownList");
+
+    // Populate the list
+    function populateDropdown(filter = "") {
+      dropdown.innerHTML = "";
+      const filtered = countryList.filter(c => c.Country.toLowerCase().startsWith(filter.toLowerCase()));
+      filtered.forEach(country => {
+        const li = document.createElement("li");
+        li.textContent = country.Country;
+        li.textOVerflow = 'ellipsis';
+        li.addEventListener("click", () => {
+          input.value = country.Country;
+          dropdown.style.display = "none";
+          selectedCountryCode = countryList.filter(c => c.Country == country.Country)[0].ISO;
+          updateBarLineChart(selectedCountryCode);
+        });
+        dropdown.appendChild(li);
+      });
+      dropdown.style.display = filtered.length ? "block" : "none";
+    }
+
+    // Search handler
+    input.addEventListener("input", () => {
+      populateDropdown(input.value);
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!document.querySelector(".dropdown-container").contains(e.target)) {
+        dropdown.style.display = "none";
+      }
+    });
+
+    const tabContents = {
+      intro: {
+        title: "Introduction",
+        paragraphs: [
+          `This project explores the relationship between <strong>QS university rankings,
+          international student mobility and national economic indicators</strong>.`,
+
+          `By comparing countries that export and import international students,
+          the study aims to uncover how educational quality and economic conditions
+          influence global student movement patterns.
+          The findings could inform more effective international education policies.`,
+
+          `The target audience of this project includes governments, educational institutions, and students around the world.
+          The main findings aim to provide inspiration and insights, 
+          while the highly interactive design allows audiences from different backgrounds to explore the content according to their interests,
+          catering to the diverse needs of all user groups.`,
+
+          `This project adopts a hybrid-driven approach. While the data story highlights the key findings, it also supports user-driven exploration.
+          We hope that users can discover previously unnoticed correlations or patterns through the dashboard. For detailed usage instructions, please refer to the <strong>"How to use it?"</strong> page.`,
+          
+          `The data story is mainly divided into three parts: <strong>Student Mobility and QS Ranking, Student Mobility and Economic Indicators</strong>, and Focus on Continents.
+          Each section explores international student mobility from different perspectives, identifying the most impactful or relevant indicators,
+          or highlighting regional differences in data distribution. You can access each section via the tabs above.`
+        ],
+        button: null
+      },
+      qs: {
+        title: "Student Mobility and QS Ranking",
+        paragraphs: [
+          `In this section, we explore how student mobility correlates with key indicators from the QS World University Rankings across different countries. 
+          Through visual comparisons and data-driven insights, we highlight several notable patterns.`,
+
+          `<strong>QS-Ranked University Count</strong>`,
+          `This figure illustrates a clear trend: countries with a higher number of QS-ranked universities tend to attract more international students. 
+          This pattern holds consistently across all continents, indicating that the presence of prestigious institutions plays a significant role in a country's ability to draw students from abroad. 
+          In other words, the QS-Ranked University Count emerges as a critical factor when assessing a country's attractiveness in the global education landscape.`,
+
+          `<strong>International Student Ratio</strong>`,
+          `We examine the relationship between student net flow and the international student ratio. 
+          While this relationship is not as strong as the one observed in the previous analysis, a general upward trend can still be observed. 
+          Notably, this trend is more pronounced in regions outside of Asia, suggesting that a higher proportion of international students within universities may still contribute positively to a country's overall student mobility profile.`
+        ],
+        buttons: [
+          {
+            text: "View QS-Ranked University Count",
+            onClick: () => {
+              activeContinents = new Set(["Asia", "Europe", "Africa", "Oceania", "Americas"]);
+              d3.select("#ySelect").property("value", "inflow").dispatch("change");
+              d3.select("#xSelect").property("value", "qs_count").dispatch("change");
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+              });
+            }
+          },
+          {
+            text: "View International Student Ratio",
+            onClick: () => {
+              activeContinents = new Set(["Europe", "Africa", "Oceania", "Americas"])
+              d3.select("#ySelect").property("value", "net_flow").dispatch("change");
+              d3.select("#xSelect").property("value", "isr_score").dispatch("change");
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+              });
+            }
+          }
+        ]
+      },
+      econ: {
+        title: "Student Mobility and Economy Indicators",
+        paragraphs: [
+          `In this section, we examine how student mobility correlates with national economic performance. 
+          While educational quality is a known factor influencing international student flows, 
+          we hypothesised that a country's economic strength might also play a crucial role. 
+          By comparing student inflow data with key economic indicators, we identified several compelling patterns.`,
+
+          `<strong>GDP and Student Inflow</strong>`,
+
+          `Unsurprisingly, GDP-related indicators emerged as strong predictors of international student inflow. 
+          Countries with higher Gross Domestic Product, whether measured by Purchasing Power Parity per capita (PPPSH) or Nominal GDP (NGDPD), tend to attract more international students.`,
+
+          `This finding suggests that economic strength not only reflects a country's ability to fund high-quality educational institutions, 
+          but also signals broader factors that influence students’ decisions, such as quality of life, employment opportunities, and visa accessibility. 
+          For instance, students may view wealthier countries as offering more stable and promising environments for both study and post-graduate career development.`,
+
+          `Moreover, this trend appears across multiple regions, reinforcing the global nature of this pattern. 
+          While there are some exceptions, the overall positive correlation between GDP and student inflow highlights how economic development and educational attractiveness often go hand in hand.`
+        ],
+        buttons: [
+          {
+            text: "View PPPSH",
+            onClick: () => {
+              activeContinents = new Set(["Asia", "Europe", "Africa", "Oceania", "Americas"]);
+              d3.select("#ySelect").property("value", "inflow").dispatch("change");
+              d3.select("#xSelect").property("value", "PPPSH").dispatch("change");
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+              });
+            }
+          },
+          {
+            text: "View NGDPD",
+            onClick: () => {
+              activeContinents = new Set(["Asia", "Europe", "Africa", "Oceania", "Americas"]);
+              d3.select("#ySelect").property("value", "inflow").dispatch("change");
+              d3.select("#xSelect").property("value", "NGDPD").dispatch("change");
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+              });
+            }
+          }
+        ]
+      },
+      continent: {
+        title: "Focus on Continents",
+        paragraphs: [
+          `In this section, we zoom out from individual countries to examine how different regions — specifically Asia, the Americas, and Europe — compare across various student mobility and QS ranking indicators. 
+          By separating the data by continent, we aim to uncover broader geographic trends that might otherwise be obscured in global-level analyses.`,
+
+          `<strong>Key Insights</strong>`,
+
+          `When comparing Asia, the Americas, and Europe — the three continents with the richest data coverage — a striking pattern emerges. Both Europe and the Americas display similar distributions across student net flow and QS-related indicators. 
+          Specifically, student net flow shows a negative correlation with average university ranking (i.e., a better [lower] ranking corresponds with higher student net flow), and positive correlations with other QS metrics such as number of ranked universities and academic reputation. 
+          This suggests that higher-ranked institutions in these regions are more likely to attract international students than lower-ranked ones.`,
+
+          `Asia, however, presents a more complex picture. At the continental level, 
+          there appears to be no strong positive or negative correlation between student net flow and the QS indicators. 
+          Upon closer inspection, this ambiguity can largely be explained by the presence of two major outliers: 
+          China and India — both countries are prominent sources of outbound international students, and their massive student outflows skew the overall regional trend.`,
+
+          `Interestingly, when we narrow our focus to student inflow (i.e., the number of incoming international students), the differences between Asia, the Americas, and Europe become less pronounced. 
+          Across all three continents, the correlation between student inflow and QS indicators remains relatively consistent, suggesting that regardless of region, countries with stronger QS performance tend to attract more international students.`,
+
+          `This comparison highlights the importance of considering both directionality (inflow vs. net flow) and regional outliers when interpreting student mobility trends on a global scale.`
+        ],
+        button: {
+          text: "View the Data",
+          onClick: () => {
+            activeContinents = new Set(["Europe", "Asia", "Americas"])
+            d3.select("#ySelect").property("value", "inflow").dispatch("change");
+            d3.select("#xSelect").property("value", "rank_display").dispatch("change");
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+        }
+      },
+      info: {
+        title: "Data Information",
+        paragraphs: [
+          `To understand the dynamics of international student mobility and its potential influencing factors, we integrated and explored three major datasets. 
+          These datasets span education statistics, global university rankings, and macroeconomic indicators. 
+          Below is a detailed breakdown of each dataset, including its structure, coverage, and purpose within the project.`,
+
+          `<strong>1. UNESCO – Inbound International Mobile Students (1998–2024)</strong><br/>
+          <em>Source:</em> UNESCO Data Browser<br/>
+          <em>Shape:</em> 9,681 rows × 5 columns<br/>
+          <em>Columns:</em><br/>
+          • <code>IndicatorId</code>: Identifies whether the data row refers to student net flow or student inbound<br/>
+          • <code>geoUnit</code>: Country or region code (includes ISO3C and UNESCO region codes)<br/>
+          • <code>value</code>: The actual count of students<br/>
+          • <code>qualifier</code>: Indicates data quality or availability status<br/>
+          • <code>magnitude</code>: Reflects adjustments (e.g., estimates or aggregated values)<br/>
+          <em>Dataset Structure:</em><br/>
+          • Student Net Flow: 2,026 rows<br/>
+          • Student Inbound: 7,655 rows<br/><br/>
+          This dataset is central to our analysis of student mobility trends across countries. 
+          We used only data from 2022 to 2024, focusing on country-level data using standardized ISO3C country codes. 
+          UNESCO-defined regional codes (e.g., “AIMS”) were excluded to ensure consistency in comparisons.`,
+
+          `<strong>2. QS World University Rankings (2022–2024)</strong><br/>
+          <em>Source:</em> Kaggle – QS Ranking Dataset<br/>
+          <em>Shape:</em> 4,221 rows × 16 columns<br/>
+          <em>Key Fields:</em><br/>
+          • <code>university_name</code>, <code>location</code>, <code>rank_display</code>, <code>score</code>, <code>size</code>, <code>focus</code>, etc.<br/>
+          • QS sub-scores and sub-rankings such as Academic Reputation (AR), Employer Reputation (ER), and International Faculty Ratio (IFR)<br/><br/>
+          This dataset includes detailed ranking information for over 4,000 universities worldwide. 
+          Each entry corresponds to a university in a given year (2022–2024), and includes both overall and component scores.<br/><br/>
+          To ensure consistency with other datasets, all country codes were converted from ISO2C to ISO3C. 
+          The <code>rank_display</code> field — which contains ranks in varied formats (e.g., 52, 601–700, 1400+) — was standardized into a single numeric value 
+          to support quantitative analysis. A histogram of rank distribution was also generated to validate the transformation logic, 
+          revealing a natural clustering in the lower-ranked range due to how QS reports ranks beyond position 800.`,
+
+          `<strong>3. International Monetary Fund – World Economic Outlook (1980–2029)</strong><br/>
+          <em>Source:</em> IMF WEO October 2024 Database<br/>
+          <em>Shape:</em> 8,625 rows × 60 columns<br/>
+          <em>Key Fields:</em><br/>
+          • <code>ISO</code>: ISO3C country code<br/>
+          • <code>WEO.Subject.Code</code>: Economic indicator (e.g., GDP, inflation)<br/>
+          • <code>Country</code>, <code>Subject.Descriptor</code>, <code>Units</code>, <code>Scale</code><br/>
+          • <code>X2022</code>, <code>X2023</code>, <code>X2024</code>: Year-specific values for each indicator<br/><br/>
+          This dataset provides country-level economic statistics and forecasts. 
+          For this project, we extracted three years (2022–2024) of economic indicators such as Nominal GDP (NGDPD) 
+          and Purchasing Power Parity per capita (PPPSH). These values were used to investigate potential correlations between 
+          a country’s economic strength and its attractiveness to international students.<br/><br/>
+          To maintain data integrity, we filtered out incomplete or inconsistent entries (e.g., blank cells or "n/a" values) 
+          and validated that economic indicators used the same currency and unit across countries.`
+        ],
+        button: {
+          text: "View Details of WEO Subject Code",
+          onClick: () => showWEOExplanationModal()
+        }
+      }
+    };
+
+    const buttons = document.querySelectorAll(".tab-button");
+    const descriptionContent = document.getElementById("descriptionContent");
+
+    function renderTab(tabKey) {
+      const content = tabContents[tabKey];
+      console.log(content);
+      if (!content) return;
+
+      let html = `<h2>${content.title}</h2>`;
+      content.paragraphs.forEach(p => {
+        html += `<p>${p}</p>`;
+      });
+
+      if (Array.isArray(content.buttons)) {
+        html += `<div class="action-button-group">`;
+        content.buttons.forEach(btn => {
+          html += `<button class="action-button">${btn.text}</button>`;
+        });
+        html += `</div>`;
+        descriptionContent.innerHTML = html;
+
+        const actionButtons = document.querySelectorAll(".action-button");
+        actionButtons.forEach((el, i) => {
+          el.onclick = content.buttons[i].onClick;
+        });
+      } else if (content.button) {
+        html += `<button class="action-button">${content.button.text}</button>`;
+        descriptionContent.innerHTML = html;
+        document.querySelector(".action-button").onclick = content.button.onClick;
+      } else {
+        descriptionContent.innerHTML = html;
+      }
+
+
+      
+    }
+
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        buttons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderTab(btn.dataset.tab);
+      });
+    });
+
+    function showWEOExplanationModal() {
+      const weoData = [
+        ["NGDP_R", "Gross domestic product, constant prices: National currency (Billions)"],
+        ["NGDP_RPCH", "Gross domestic product, constant prices: Percent change (Units)"],
+        ["NGDP", "Gross domestic product, current prices: National currency (Billions)"],
+        ["NGDPD", "Gross domestic product, current prices: U.S. dollars (Billions)"],
+        ["PPPGDP", "Gross domestic product, current prices: Purchasing power parity; international dollars (Billions)"],
+        ["NGDP_D", "Gross domestic product, deflator: Index (Units)"],
+        ["NGDPRPC", "Gross domestic product per capita, constant prices: National currency (Units)"],
+        ["NGDPRPPPPC", "Gross domestic product per capita, constant prices: Purchasing power parity; 2017 international dollar (Units)"],
+        ["NGDPPC", "Gross domestic product per capita, current prices: National currency (Units)"],
+        ["NGDPDPC", "Gross domestic product per capita, current prices: U.S. dollars (Units)"],
+        ["PPPPC", "Gross domestic product per capita, current prices: Purchasing power parity; international dollars (Units)"],
+        ["NGAP_NPGDP", "Output gap in percent of potential GDP: Percent of potential GDP (Units)"],
+        ["PPPSH", "Gross domestic product based on purchasing-power-parity (PPP) share of world total: Percent (Units)"],
+        ["PPPEX", "Implied PPP conversion rate: National currency per current international dollar (Units)"],
+        ["NID_NGDP", "Total investment: Percent of GDP (Units)"],
+        ["NGSD_NGDP", "Gross national savings: Percent of GDP (Units)"],
+        ["PCPI", "Inflation, average consumer prices: Index (Units)"],
+        ["PCPIPCH", "Inflation, average consumer prices: Percent change (Units)"],
+        ["PCPIE", "Inflation, end of period consumer prices: Index (Units)"],
+        ["PCPIEPCH", "Inflation, end of period consumer prices: Percent change (Units)"],
+        ["TM_RPCH", "Volume of imports of goods and services: Percent change (Units)"],
+        ["TMG_RPCH", "Volume of Imports of goods: Percent change (Units)"],
+        ["TX_RPCH", "Volume of exports of goods and services: Percent change (Units)"],
+        ["TXG_RPCH", "Volume of exports of goods: Percent change (Units)"],
+        ["LUR", "Unemployment rate: Percent of total labor force (Units)"],
+        ["LE", "Employment: Persons (Millions)"],
+        ["LP", "Population: Persons (Millions)"],
+        ["GGR", "General government revenue: National currency (Billions)"],
+        ["GGR_NGDP", "General government revenue: Percent of GDP (Units)"],
+        ["GGX", "General government total expenditure: National currency (Billions)"],
+        ["GGX_NGDP", "General government total expenditure: Percent of GDP (Units)"],
+        ["GGXCNL", "General government net lending/borrowing: National currency (Billions)"],
+        ["GGXCNL_NGDP", "General government net lending/borrowing: Percent of GDP (Units)"],
+        ["GGSB", "General government structural balance: National currency (Billions)"],
+        ["GGSB_NPGDP", "General government structural balance: Percent of potential GDP (Units)"],
+        ["GGXONLB", "General government primary net lending/borrowing: National currency (Billions)"],
+        ["GGXONLB_NGDP", "General government primary net lending/borrowing: Percent of GDP (Units)"],
+        ["GGXWDN", "General government net debt: National currency (Billions)"],
+        ["GGXWDN_NGDP", "General government net debt: Percent of GDP (Units)"],
+        ["GGXWDG", "General government gross debt: National currency (Billions)"],
+        ["GGXWDG_NGDP", "General government gross debt: Percent of GDP (Units)"],
+        ["NGDP_FY", "Gross domestic product corresponding to fiscal year, current prices: National currency (Billions)"],
+        ["BCA", "Current account balance: U.S. dollars (Billions)"],
+        ["BCA_NGDPD", "Current account balance: Percent of GDP (Units)"]
+      ];
+
+      const tbody = document.querySelector("#weoTable tbody");
+      tbody.innerHTML = "";
+
+      weoData.forEach(([code, desc]) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${code}</td><td>${desc}</td>`;
+        tbody.appendChild(row);
+      });
+
+      const modal = document.getElementById("weoModal");
+      modal.style.display = "flex";
+
+      document.querySelector(".close-button").onclick = () => {
+        modal.style.display = "none";
+      };
+
+      window.onclick = (event) => {
+        if (event.target === modal) {
+          modal.style.display = "none";
+        }
+      };
+    }
+
+    function startTour() {
+      window.scrollTo({
+              top: 100,
+              behavior: "smooth"
+            });
+
+      const steps = [
+        {
+          element: "#bubbleChartWrapper",
+          text: `Here is the main bubble chart, which can be used to analyze the relationships between different indicators. 
+                The continent legend serves as a filter option.`,
+          position: "right"
+        },
+        {
+          element: "#xSelect",
+          text: "This is selector for x axis, you can select an indicator you want to show on x axis",
+          position: "right"
+        },
+        {
+          element: "#ySelect",
+          text: "This is selector for y axis, you can select an indicator you want to show on y axis",
+          position: "right"
+        },
+        {
+          element: "#toggleLabelsElement",
+          text: "This is a checkbox for displaying the country labels on bubble chart",
+          position: "top"
+        },
+        {
+          element: "#sizeSelect",
+          text: "This is selector for bubble size, you can select an indicator you want to show on bubble size",
+          position: "top"
+        },  
+        {
+          element: "#dropdownInline",
+          text: "This is selector for QS indicator aggregation method, you can select a method you want.",
+          position: "top"
+        },
+        
+        {
+          element: "#barLineChartContainer",
+          text: "This is bar chart with line (2 y-axis). It shows the data changes over time in a specific country",
+          position: "left"
+        },
+        {
+          element: "#dropdownContainer",
+          text: "This is a search box. You can search the country you preferred, the result will be shown on the Bar Chart above",
+          position: "top"
+        }
+      ];
+
+      let currentStep = 0;
+
+      const overlay = document.getElementById("tourOverlay");
+      const dialog = document.getElementById("tourDialog");
+      const text = document.getElementById("tourText");
+      const prevBtn = document.getElementById("tourPrev");
+      const nextBtn = document.getElementById("tourNext");
+      const endBtn = document.getElementById("tourEnd");
+
+      let currentTarget = null;
+
+      function positionDialog(target, position) {
+        const rect = target.getBoundingClientRect();
+        const margin = 10;
+        const dialogWidth = dialog.offsetWidth;
+        const dialogHeight = dialog.offsetHeight;
+
+        let top = 0, left = 0;
+
+        switch (position) {
+          case "top":
+            top = rect.top - dialogHeight - margin;
+            left = rect.left + (rect.width - dialogWidth) / 2;
+            break;
+          case "bottom":
+            top = rect.bottom + margin;
+            left = rect.left + (rect.width - dialogWidth) / 2;
+            break;
+          case "right":
+            top = rect.top + (rect.height - dialogHeight) / 2;
+            left = rect.right + margin;
+            break;
+          case "left":
+            top = rect.top + (rect.height - dialogHeight) / 2;
+            left = rect.left - dialogWidth - margin;
+            break;
+          default:
+            top = rect.top + margin;
+            left = rect.left + margin;
+        }
+
+        const maxLeft = window.scrollX + window.innerWidth - dialogWidth - margin;
+        const maxTop = window.scrollY + window.innerHeight - dialogHeight - margin;
+
+        left = Math.max(window.scrollX + margin, Math.min(left, maxLeft));
+        top = Math.max(window.scrollY + margin, Math.min(top, maxTop));
+
+        dialog.style.top = `${top}px`;
+        dialog.style.left = `${left}px`;
+      }
+
+      function showStep(index) {
+        const step = steps[index];
+        const target = document.querySelector(step.element);
+        if (!target) return;
+
+        document.querySelectorAll(".tour-highlight").forEach(el =>
+          el.classList.remove("tour-highlight")
+        );
+        target.classList.add("tour-highlight");
+        text.innerText = step.text;
+
+        currentTarget = target;
+
+        // 先滑動
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        // 追蹤滾動直到穩定後才定位對話框
+        let lastY = null;
+        let stableFrames = 0;
+
+        function waitForScrollSettle() {
+          const currentY = target.getBoundingClientRect().top;
+
+          if (lastY !== null && Math.abs(currentY - lastY) < 2) {
+            stableFrames++;
+          } else {
+            stableFrames = 0;
+          }
+
+          lastY = currentY;
+
+          if (stableFrames >= 10) {
+            // 當位置連續10 frame內變化極小，視為滾動完成
+            positionDialog(target, step.position);
+            overlay.style.display = "block";
+            prevBtn.style.display = index === 0 ? "none" : "inline-block";
+            nextBtn.style.display = index === steps.length - 1 ? "none" : "inline-block";
+          } else {
+            requestAnimationFrame(waitForScrollSettle);
+          }
+        }
+
+        requestAnimationFrame(waitForScrollSettle);
+      }
+
+
+
+      function endTour() {
+        overlay.style.display = "none";
+        document.querySelectorAll(".tour-highlight").forEach(el =>
+          el.classList.remove("tour-highlight")
+        );
+        window.removeEventListener("scroll", syncPosition);
+        window.removeEventListener("resize", syncPosition);
+      }
+
+      function syncPosition() {
+        if (currentTarget && steps[currentStep]) {
+          positionDialog(currentTarget, steps[currentStep].position);
+        }
+      }
+
+      prevBtn.onclick = () => {
+        if (currentStep > 0) {
+          currentStep--;
+          showStep(currentStep);
+        }
+      };
+
+      nextBtn.onclick = () => {
+        if (currentStep < steps.length - 1) {
+          currentStep++;
+          showStep(currentStep);
+        }
+      };
+
+      endBtn.onclick = endTour;
+
+      window.addEventListener("scroll", syncPosition);
+      window.addEventListener("resize", syncPosition);
+
+      showStep(currentStep);
+    }
+
+
+
+    renderTab("intro");
+  </script>
+
+  <div id="tooltip" style="position: absolute; visibility: hidden; background: #eee; padding: 8px; border-radius: 4px; font-size: 12px; box-shadow: 0 0 5px rgba(0,0,0,0.2);"></div>
+
+</body>
+</html>

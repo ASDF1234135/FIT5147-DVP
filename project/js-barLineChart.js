@@ -68,14 +68,10 @@ function updateBarLineChart(countryCode) {
 
   // Add chart title
   const countryName = countryList.find(w => w.ISO === countryCode).Country;
-  const chartTitle = `${yVar.toUpperCase()} vs ${xVar.toUpperCase()} in ${countryName}`;
+  const chartTitle = `The changes of ${yVar in sizeLegendLabel ? sizeLegendLabel[yVar] : yVar} and 
+                      ${xVar in sizeLegendLabel ? sizeLegendLabel[xVar] : xVar} in ${countryName}, 2022-2024`;
 
-  barLineSvg.append("text")
-    .attr("x", width / 2)
-    .attr("y", margin.top / 2)
-    .attr("text-anchor", "middle")
-    .attr("font-size", "16px")
-    .attr("font-weight", "bold")
+  d3.select("#barLineChartTitle")
     .text(chartTitle);
 
   // Draw axes
