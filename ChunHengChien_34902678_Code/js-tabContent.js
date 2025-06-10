@@ -82,7 +82,7 @@ const tabContents = {
       `<strong>GDP and Student Inflow</strong>`,
 
       `Unsurprisingly, GDP-related indicators emerged as strong predictors of international student inflow. 
-      Countries with higher Gross Domestic Product, whether measured by Purchasing Power Parity per capita (PPPSH) or Nominal GDP (NGDPD), tend to attract more international students.`,
+      Countries with higher Gross Domestic Product, whether measured by GDP based on purchasing-power-parity (PPPSH) or GDP: US-dollars (NGDPD), tend to attract more international students.`,
 
       `This finding suggests that economic strength not only reflects a country's ability to fund high-quality educational institutions, 
       but also signals broader factors that influence students' decisions, such as quality of life, employment opportunities, and visa accessibility. 
